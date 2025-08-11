@@ -597,12 +597,12 @@ return {
   }
 
   // Fonctions utilitaires pour l'analyse avancée
-  assessPredictionQuality(prediction, scoreResult) {
+assessPredictionQuality(prediction, scoreResult) {
     const factors = {
       exactMatch: prediction.predictedScore === scoreResult.actualScore,
       goalsDifference: this.calculateGoalsDifference(prediction.predictedScore, scoreResult.actualScore),
       confidenceAlignment: this.isConfidenceAligned(prediction, scoreResult.correct),
-      riskAssessment: this.wasRiskAssessed Correctly(prediction, scoreResult)
+      riskAssessment: this.wasRiskAssessedCorrectly(prediction, scoreResult)
     };
     
     let quality = 'poor';
@@ -658,6 +658,78 @@ return {
   getMarketAlignment(prediction) {
     return Math.random() * 0.3 + 0.6; // Simulation
   }
+wasRiskAssessedCorrectly(prediction, scoreResult) {
+    if (!prediction.riskLevel || !scoreResult) return false;
+    
+    const riskLevel = prediction.riskLevel.toLowerCase();
+    const wasCorrect = scoreResult.correct;
+    
+    // High risk predictions should have lower accuracy expectation
+    if (riskLevel === 'high' && !wasCorrect) return true;
+    // Low risk predictions should have higher accuracy expectation  
+    if (riskLevel === 'low' && wasCorrect) return true;
+    // Medium risk allows for moderate accuracy
+    if (riskLevel === 'medium') return true;
+    
+    return false;
+  }
+
+  isConfidenceAligned(prediction, isCorrect) {
+    const confidence = prediction.confidence || 50;
+    
+    // High confidence should correlate with correct predictions
+    if (confidence > 70 && isCorrect) return true;
+    // Low confidence should correlate with incorrect predictions
+    if (confidence < 50 && !isCorrect) return true;
+    // Medium confidence is generally acceptable
+    if (confidence >= 50 && confidence <= 70) return true;
+    
+    return false;
+  }
+
+  async getHistoricalMatchData(homeTeam, awayTeam) {
+    // Simulate historical match data retrieval
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    return {
+      totalMatches: Math.floor(Math.random() * 20) + 5,
+      homeWins: Math.floor(Math.random() * 10) + 2,
+      awayWins: Math.floor(Math.random() * 10) + 2,
+      draws: Math.floor(Math.random() * 5) + 1,
+      averageGoalsHome: (Math.random() * 2 + 1).toFixed(1),
+      averageGoalsAway: (Math.random() * 2 + 1).toFixed(1),
+      lastFiveResults: this.generateLastFiveResults()
+    };
+  }
+
+  generateLastFiveResults() {
+    const results = [];
+    for (let i = 0; i < 5; i++) {
+      results.push({
+        homeGoals: Math.floor(Math.random() * 4),
+        awayGoals: Math.floor(Math.random() * 4),
+        date: new Date(Date.now() - (i * 7 * 24 * 60 * 60 * 1000)).toISOString()
+      });
+    }
+    return results;
+  }
+
+  async getHeadToHeadStats(homeTeam, awayTeam) {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    return {
+      recentForm: {
+        home: this.analyzeRecentForm(homeTeam),
+        away: this.analyzeRecentForm(awayTeam)
+      },
+      dominance: Math.random() > 0.5 ? 'home' : 'away',
+      competitiveness: Math.random() * 0.5 + 0.5, // 0.5 to 1.0
+      goalTrends: {
+        highScoring: Math.random() > 0.7,
+        defensiveBattle: Math.random() > 0.8
+      }
+    };
+  }
 
   isRivalryMatch(teamStats) {
     return Math.random() < 0.2; // 20% chance simulation
@@ -669,8 +741,8 @@ return {
     const variance = coefficients.reduce((sum, c) => sum + Math.pow(c - avg, 2), 0) / coefficients.length;
     return Math.sqrt(variance);
   }
-}
-async checkAllPendingScores() {
+
+  async checkAllPendingScores() {
     const pendingPredictions = this.predictions.filter(p => !p.actualResult);
     const results = [];
 
