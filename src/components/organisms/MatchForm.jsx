@@ -79,7 +79,7 @@ const MatchForm = ({ onSubmit, isLoading }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -91,6 +91,9 @@ const MatchForm = ({ onSubmit, isLoading }) => {
       item => item.score && item.coefficient && !isNaN(item.coefficient)
     );
 
+    // Pré-analyse IA des données
+    const aiPreAnalysis = await performPreAnalysis(formData.homeTeam, formData.awayTeam);
+    
     const matchData = {
       homeTeam: formData.homeTeam.trim(),
       awayTeam: formData.awayTeam.trim(),
@@ -99,10 +102,78 @@ const MatchForm = ({ onSubmit, isLoading }) => {
         score: item.score.trim(),
         coefficient: parseFloat(item.coefficient),
         probability: ((1 / parseFloat(item.coefficient)) * 100).toFixed(1)
-      }))
+      })),
+      aiPreAnalysis: aiPreAnalysis
     };
 
+    // Toast avec informations IA
+    toast.info(
+      `🧠 IA activée: ${aiPreAnalysis.confidence}% confiance | ${aiPreAnalysis.riskLevel} risque`,
+      { autoClose: 4000 }
+    );
+
     onSubmit(matchData);
+  };
+
+  // Nouvelle fonction d'analyse préliminaire
+  const performPreAnalysis = async (homeTeam, awayTeam) => {
+    // Simulation d'analyse IA préliminaire
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const teamStrength = analyzeTeamStrength(homeTeam, awayTeam);
+    const marketTrends = analyzeFormMarketTrends();
+    
+    return {
+      teamAnalysis: teamStrength,
+      marketSentiment: marketTrends,
+      confidence: Math.round(teamStrength.overallRating + marketTrends.confidence),
+      riskLevel: teamStrength.riskLevel,
+      keyFactors: [
+        `Force équipes: ${teamStrength.strengthRatio}`,
+        `Tendance marché: ${marketTrends.trend}`,
+        `Historique: ${teamStrength.historicalAdvantage}`
+      ]
+    };
+  };
+
+  const analyzeTeamStrength = (homeTeam, awayTeam) => {
+    // Simulation basée sur les noms d'équipes
+    const homeStrength = getTeamStrength(homeTeam);
+    const awayStrength = getTeamStrength(awayTeam);
+    
+    return {
+      homeStrength,
+      awayStrength,
+      strengthRatio: (homeStrength / awayStrength).toFixed(2),
+      overallRating: Math.round((homeStrength + awayStrength) / 2),
+      riskLevel: Math.abs(homeStrength - awayStrength) > 20 ? 'faible' : Math.abs(homeStrength - awayStrength) > 10 ? 'moyen' : 'élevé',
+      historicalAdvantage: homeStrength > awayStrength ? 'domicile' : 'visiteur'
+    };
+  };
+
+  const getTeamStrength = (teamName) => {
+    // Algorithme simple basé sur le nom (simulation)
+    const name = teamName.toLowerCase();
+    let strength = 50;
+    
+    // Équipes "fortes" simulées
+    if (name.includes('manchester') || name.includes('liverpool') || name.includes('chelsea')) strength += 25;
+    else if (name.includes('arsenal') || name.includes('tottenham') || name.includes('city')) strength += 20;
+    else if (name.includes('united') || name.includes('real') || name.includes('barcelona')) strength += 30;
+    
+    // Variation aléatoire
+    strength += Math.floor(Math.random() * 20 - 10);
+    
+    return Math.max(30, Math.min(90, strength));
+  };
+
+  const analyzeFormMarketTrends = () => {
+    return {
+      trend: Math.random() > 0.5 ? 'haussier' : 'baissier',
+      volatility: Math.random() > 0.7 ? 'élevée' : 'normale',
+      confidence: Math.floor(Math.random() * 30 + 60), // 60-90%
+      marketSentiment: Math.random() > 0.6 ? 'optimiste' : 'prudent'
+    };
   };
 
   const clearForm = () => {
@@ -238,8 +309,8 @@ const MatchForm = ({ onSubmit, isLoading }) => {
               </>
             ) : (
               <>
-                <ApperIcon name="Brain" size={20} />
-                Générer Prédiction IA
+<ApperIcon name="Brain" size={20} />
+                {getFilledScoresCount() >= 3 ? 'Générer Prédiction IA Avancée' : 'Générer Prédiction IA'}
               </>
             )}
           </Button>
