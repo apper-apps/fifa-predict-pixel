@@ -140,7 +140,7 @@ const checkScore = async (predictionId) => {
       }
       
 // Log détaillé pour le débogage (en développement)
-      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('📊 Rapport de vérification IA:', {
           total: results.length,
           terminés: finished.length,

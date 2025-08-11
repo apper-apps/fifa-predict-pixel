@@ -137,7 +137,7 @@ const generatePrediction = async (matchData) => {
         marketVolatility: Math.round(realTimeContext.marketVolatility * 100),
         processingTime: Math.round((scoreOdds?.length || 10) * 0.3 + 2),
         keyFactors: ['Cotes analysées', 'Patterns historiques', 'Contexte temps réel']
-      },
+},
       algorithmBreakdown: algorithmBreakdown,
       realTimeFactors: realTimeContext,
       alternativeScenarios: baseAnalysis.topPredictions.slice(1, 4).map(pred => ({
@@ -145,7 +145,6 @@ const generatePrediction = async (matchData) => {
         probability: pred.probability,
         confidence: Math.round(pred.probability + Math.random() * 10)
       }))
-}))
     };
   };
 
@@ -174,25 +173,25 @@ const analyzeOdds = (scoreOdds) => {
       return {
         score: item.score,
         coefficient: coefficient,
-        impliedProbability: impliedProbability,
+impliedProbability: impliedProbability,
         normalizedProbability: parseFloat(item.probability) || impliedProbability,
         weight: normalizedWeight,
-        marketConfidence: this.calculateMarketConfidence(coefficient)
+        marketConfidence: calculateMarketConfidence(coefficient)
       };
     });
 
     // Tri par probabilité normalisée
-    const sortedScores = scoreProbabilities.sort((a, b) => b.normalizedProbability - a.normalizedProbability);
+const sortedScores = scoreProbabilities.sort((a, b) => b.normalizedProbability - a.normalizedProbability);
     
     // Sélection du score principal avec validation multi-critères
-    const primaryScore = this.selectPrimaryScore(sortedScores);
+    const primaryScore = selectPrimaryScore(sortedScores);
     let predictedScore = primaryScore.score;
     let baseConfidence = primaryScore.normalizedProbability;
 
-    // Facteurs d'amélioration de la confiance
+// Facteurs d'amélioration de la confiance
     const analysisDepth = validScores.length;
-    const marketConsensus = this.calculateMarketConsensus(scoreProbabilities);
-    const volatilityFactor = this.calculateVolatilityFactor(scoreProbabilities);
+    const marketConsensus = calculateMarketConsensus(scoreProbabilities);
+    const volatilityFactor = calculateVolatilityFactor(scoreProbabilities);
     
     // Multiplicateur de confiance adaptatif
     let confidenceMultiplier = 1;
@@ -227,12 +226,11 @@ const analyzeOdds = (scoreOdds) => {
     // Génération des prédictions alternatives avec analyse de risque
     const topPredictions = sortedScores.slice(0, 6).map((score, index) => ({
       score: score.score,
-      probability: Math.round(score.normalizedProbability),
+probability: Math.round(score.normalizedProbability),
       coefficient: score.coefficient,
-      risk: this.calculateRiskLevel(score.coefficient, index),
+      risk: calculateRiskLevel(score.coefficient, index),
       marketConfidence: score.marketConfidence
     }));
-
     return {
       predictedScore,
       confidence: finalConfidence,
