@@ -98,7 +98,11 @@ const handleSubmit = async (e) => {
       return;
     }
 
-    const validScoreOdds = formData.scoreOdds.filter(
+const validScoreOdds = formData.scoreOdds.filter(
+      item => item.score && item.coefficient && !isNaN(item.coefficient)
+    );
+    
+    const validHalftimeScoreOdds = (formData.halftimeScoreOdds || []).filter(
       item => item.score && item.coefficient && !isNaN(item.coefficient)
     );
 

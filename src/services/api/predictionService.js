@@ -1018,6 +1018,10 @@ generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
       };
     }
   }
+}
+
+  generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
+    const baseAnalysis = this.generatePostMatchAIAnalysis(prediction, scoreResult);
     
     return {
       ...baseAnalysis,
@@ -1029,8 +1033,6 @@ generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
       futureOptimization: this.generateFutureOptimizationSuggestions(prediction, scoreResult)
     };
   }
-
-  performAdvancedLiveAnalysis(prediction, scoreResult) {
     const currentMinute = scoreResult.minute || 0;
     const currentScore = scoreResult.currentScore.split('-').map(Number);
     const predictedScore = prediction.predictedScore.split('-').map(Number);
@@ -2082,7 +2084,6 @@ generateAdvancedFallbackPrediction(prediction) {
       'score_difference',
       'momentum_shift'
     ];
+];
   }
 }
-
-export const predictionService = new PredictionService();
