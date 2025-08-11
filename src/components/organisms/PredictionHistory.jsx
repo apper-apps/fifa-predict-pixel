@@ -69,32 +69,89 @@ try {
     );
   };
 
-  const checkScore = async (predictionId) => {
+const checkScore = async (predictionId) => {
     try {
       const result = await predictionService.checkScoresWith1XBET(predictionId);
-      toast.success(result.message);
+      
+      // Messages améliorés selon le statut
       if (result.status === 'terminé') {
+        if (result.correct) {
+          toast.success(
+            `🎯 IA EXACTE! ${result.actualScore} prédit avec ${result.algorithmPerformance?.accuracy || 'N/A'}% précision`,
+            { autoClose: 5000 }
+          );
+        } else {
+          toast.warning(
+            `📊 ${result.actualScore} vs ${predictions.find(p => p.Id === predictionId)?.predictedScore} | Apprentissage IA activé`,
+            { autoClose: 4000 }
+          );
+        }
         loadPredictions(); // Actualiser la liste
+      } else if (result.status === 'en_cours') {
+        toast.info(
+          `⚡ LIVE: ${result.currentScore} (${result.minute}') | Proba ajustée: ${result.realTimePredictions?.adjustedPrediction || 'N/A'}`,
+          { autoClose: 3000 }
+        );
+      } else if (result.status === 'a_venir') {
+        toast.info(
+          `🚀 IA optimisée à ${result.predictionReadiness?.readinessScore || 'N/A'}% | ${result.realTimeFactors?.contextScore || 'Standard'} contexte`,
+          { autoClose: 3000 }
+        );
+      } else {
+        toast.error(result.message || "Erreur lors de la vérification", { autoClose: 4000 });
       }
+      
     } catch (error) {
-      toast.error(`Erreur lors de la vérification: ${error.message}`);
+      toast.error(`🔧 Erreur système: ${error.message}`, { autoClose: 4000 });
     }
   };
 
   const checkAllScores = async () => {
     try {
-      toast.info("Vérification des scores en cours...");
+      toast.info("🔄 Analyse IA en cours sur toutes les prédictions...", { autoClose: 2000 });
       const results = await predictionService.checkAllPendingScores();
       
+      // Analyse des résultats
       const finished = results.filter(r => r.status === 'terminé');
+      const live = results.filter(r => r.status === 'en_cours');
+      const correct = finished.filter(r => r.correct);
+      const errors = results.filter(r => r.error);
+      
+      // Message de résumé détaillé
       if (finished.length > 0) {
-        toast.success(`${finished.length} résultat(s) mis à jour depuis 1XBET!`);
+        const accuracy = Math.round((correct.length / finished.length) * 100);
+        toast.success(
+          `📈 ${finished.length} résultat(s) finalisés | Précision IA: ${accuracy}% | ${live.length} match(s) en cours`,
+          { autoClose: 6000 }
+        );
         loadPredictions();
+      } else if (live.length > 0) {
+        toast.info(
+          `⚽ ${live.length} match(s) en direct suivis par l'IA | Mise à jour temps réel active`,
+          { autoClose: 4000 }
+        );
+      } else if (errors.length === 0) {
+        toast.info("✅ Toutes les prédictions sont à jour | Système IA opérationnel", { autoClose: 3000 });
       } else {
-        toast.info("Aucun nouveau résultat disponible");
+        toast.warning(
+          `⚠️ ${errors.length} erreur(s) détectées | Mode de récupération activé`,
+          { autoClose: 4000 }
+        );
       }
+      
+// Log détaillé pour le débogage (en développement)
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        console.log('📊 Rapport de vérification IA:', {
+          total: results.length,
+          terminés: finished.length,
+          enCours: live.length,
+          précision: finished.length > 0 ? Math.round((correct.length / finished.length) * 100) : 0,
+          erreurs: errors.length
+        });
+      }
+      
     } catch (error) {
-      toast.error(`Erreur lors de la vérification: ${error.message}`);
+      toast.error(`🚨 Erreur système critique: ${error.message}`, { autoClose: 5000 });
     }
   };
 
