@@ -13,6 +13,12 @@
       {"score": "1-1", "coefficient": 3.8, "probability": "26.3"},
       {"score": "2-0", "coefficient": 12.0, "probability": "8.3"}
     ],
+    "confrontationHalftimeScores": [
+      {"score": "1-0", "coefficient": 3.2, "probability": "31.3"},
+      {"score": "0-0", "coefficient": 4.1, "probability": "24.4"},
+      {"score": "0-1", "coefficient": 5.8, "probability": "17.2"},
+      {"score": "1-1", "coefficient": 6.5, "probability": "15.4"}
+    ],
     "topPredictions": [
       {"score": "1-1", "probability": "26.3"},
       {"score": "1-0", "probability": "23.8"},
@@ -37,6 +43,12 @@
       {"score": "0-1", "coefficient": 4.5, "probability": "22.2"},
       {"score": "1-1", "coefficient": 4.8, "probability": "20.8"},
       {"score": "2-1", "coefficient": 15.5, "probability": "6.5"}
+    ],
+    "confrontationHalftimeScores": [
+      {"score": "0-1", "coefficient": 2.8, "probability": "35.7"},
+      {"score": "0-0", "coefficient": 3.9, "probability": "25.6"},
+      {"score": "1-0", "coefficient": 4.7, "probability": "21.3"},
+      {"score": "1-1", "coefficient": 7.2, "probability": "13.9"}
     ],
     "topPredictions": [
       {"score": "0-1", "probability": "22.2"},
@@ -63,6 +75,12 @@
       {"score": "1-1", "coefficient": 3.5, "probability": "28.6"},
       {"score": "2-0", "coefficient": 11.8, "probability": "8.5"},
       {"score": "0-2", "coefficient": 18.2, "probability": "5.5"}
+    ],
+    "confrontationHalftimeScores": [
+      {"score": "1-1", "coefficient": 2.9, "probability": "34.5"},
+      {"score": "1-0", "coefficient": 3.8, "probability": "26.3"},
+      {"score": "0-0", "coefficient": 4.5, "probability": "22.2"},
+      {"score": "0-1", "coefficient": 6.1, "probability": "16.4"}
     ],
     "topPredictions": [
       {"score": "1-1", "probability": "28.6"},

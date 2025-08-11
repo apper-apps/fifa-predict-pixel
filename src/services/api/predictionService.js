@@ -1,4 +1,6 @@
 import { scoresService } from "./scoresService";
+import React from "react";
+import Error from "@/components/ui/Error";
 import predictionsData from "@/services/mockData/predictions.json";
 
 class PredictionService {
@@ -129,11 +131,11 @@ calculateAdvancedAIPrediction({ teamStats, historicalData, oddsAnalysis, marketT
       this.enhancedStatisticalAnalysisAlgorithm(teamStats, historicalData, scoreRangeAnalysis, confrontationAnalysis),
       this.marketSentimentAlgorithm(marketTrends, oddsAnalysis),
       this.advancedPatternRecognitionAlgorithm(historicalData, teamStats, scoreRangeAnalysis),
-      this.realTimeContextAlgorithmAdvanced(teamStats, oddsAnalysis, originalData),
+this.realTimeContextAlgorithmAdvanced(teamStats, oddsAnalysis, originalData),
+      this.geneticAlgorithmPrediction(teamStats, historicalData, oddsAnalysis, originalData),
+this.geneticAlgorithmPrediction(teamStats, historicalData, oddsAnalysis, originalData),
       this.enhancedNeuralNetworkSimulation(teamStats, historicalData, oddsAnalysis, scoreRangeAnalysis)
     ];
-    
-    // Filtrer les résultats invalides (NaN, undefined)
     const validAlgorithms = algorithms.filter(result => 
       result && result.score && !result.score.includes('NaN') && result.confidence && !isNaN(result.confidence)
     );
@@ -288,7 +290,7 @@ enhancedNeuralNetworkSimulation(teamStats, historicalData, oddsAnalysis, scoreRa
   }
 
   getDynamicAlgorithmWeight(index, performance, teamStats) {
-    const baseWeights = [0.25, 0.20, 0.15, 0.20, 0.12, 0.08]; // Pondération de base
+const baseWeights = [0.22, 0.18, 0.13, 0.18, 0.11, 0.07, 0.11]; // Pondération de base avec algorithme génétique
     const performanceMultiplier = performance[index] || 1.0;
     const contextAdjustment = this.getContextualAdjustment(index, teamStats);
     
@@ -763,7 +765,7 @@ calculateAdvancedAIStats(completedPredictions) {
 
   analyzeIndividualAlgorithmPerformance(completedPredictions) {
     const algorithmNames = [
-      'probability_based', 'statistical_analysis', 'market_sentiment', 
+'probability_based', 'statistical_analysis', 'market_sentiment', 'genetic_algorithm',
       'pattern_recognition', 'real_time_context', 'neural_network'
     ];
     
@@ -1587,6 +1589,239 @@ wasRiskAssessedCorrectly(prediction, scoreResult) {
       tacticalPatterns: ['Attaque rapide', 'Défense solide', 'Jeu de possession', 'Contre-attaques'],
       keyFactors: ['Forme récente', 'Historique des confrontations', 'Conditions de jeu']
     };
+  }
+
+// Algorithme génétique pour prédiction de scores exacts
+  geneticAlgorithmPrediction(teamStats, historicalData, oddsAnalysis, originalData) {
+    const populationSize = 20;
+    const generations = 15;
+    const mutationRate = 0.1;
+    const eliteSize = 4;
+    
+    // Initialisation de la population basée sur les confrontations mi-temps
+    let population = this.initializeGeneticPopulation(populationSize, originalData, teamStats);
+    
+    for (let generation = 0; generation < generations; generation++) {
+      // Évaluation fitness de chaque individu
+      const fitness = population.map(individual => 
+        this.calculateGeneticFitness(individual, originalData, teamStats, oddsAnalysis)
+      );
+      
+      // Sélection et reproduction
+      const newPopulation = [];
+      
+      // Élitisme - garder les meilleurs
+      const sortedIndices = fitness.map((fit, idx) => ({ fit, idx }))
+        .sort((a, b) => b.fit - a.fit)
+        .slice(0, eliteSize)
+        .map(item => item.idx);
+      
+      sortedIndices.forEach(idx => newPopulation.push(population[idx]));
+      
+      // Génération du reste par croisement et mutation
+      while (newPopulation.length < populationSize) {
+        const parent1 = this.tournamentSelection(population, fitness);
+        const parent2 = this.tournamentSelection(population, fitness);
+        let child = this.crossover(parent1, parent2, originalData);
+        
+        if (Math.random() < mutationRate) {
+          child = this.mutate(child, originalData, teamStats);
+        }
+        
+        newPopulation.push(child);
+      }
+      
+      population = newPopulation;
+    }
+    
+    // Retourner le meilleur individu
+    const finalFitness = population.map(individual => 
+      this.calculateGeneticFitness(individual, originalData, teamStats, oddsAnalysis)
+    );
+    const bestIndex = finalFitness.indexOf(Math.max(...finalFitness));
+    const bestScore = population[bestIndex];
+    
+    return {
+      score: bestScore,
+      confidence: Math.min(0.95, 0.65 + (Math.max(...finalFitness) / 100) * 0.3),
+      algorithm: 'genetic_algorithm',
+      details: {
+        generations: generations,
+        finalFitness: Math.max(...finalFitness),
+        populationDiversity: this.calculatePopulationDiversity(population)
+      }
+    };
+  }
+  
+  // Initialisation population génétique
+  initializeGeneticPopulation(size, originalData, teamStats) {
+    const population = [];
+    const confrontationScores = [];
+    
+    // Priorité aux scores mi-temps des confrontations directes
+    if (originalData.confrontationHalftimeScores && originalData.confrontationHalftimeScores.length >= 4) {
+      confrontationScores.push(...originalData.confrontationHalftimeScores.map(item => item.score).filter(Boolean));
+    }
+    
+    // Ajout scores du formulaire si disponibles
+    if (originalData.scoreOdds && originalData.scoreOdds.length > 0) {
+      confrontationScores.push(...originalData.scoreOdds.map(item => item.score).filter(Boolean));
+    }
+    
+    // Génération basée sur les forces d'équipes
+    const homeStrength = teamStats.homeTeam?.attackStrength || 0.5;
+    const awayStrength = teamStats.awayTeam?.attackStrength || 0.5;
+    const baseScores = this.generateBaseScores(homeStrength, awayStrength);
+    
+    for (let i = 0; i < size; i++) {
+      let score;
+      if (i < confrontationScores.length && confrontationScores.length > 0) {
+        // Utiliser les scores des confrontations en priorité
+        score = confrontationScores[i % confrontationScores.length];
+      } else if (i < baseScores.length) {
+        score = baseScores[i];
+      } else {
+        // Génération aléatoire pondérée
+        const homeGoals = Math.floor(Math.random() * 4 * (homeStrength + 0.3));
+        const awayGoals = Math.floor(Math.random() * 4 * (awayStrength + 0.3));
+        score = `${homeGoals}-${awayGoals}`;
+      }
+      population.push(score);
+    }
+    
+    return population;
+  }
+  
+  // Calcul fitness individu génétique
+  calculateGeneticFitness(score, originalData, teamStats, oddsAnalysis) {
+    let fitness = 50; // Base
+    
+    const [homeGoals, awayGoals] = score.split('-').map(Number);
+    
+    // Bonus pour scores des confrontations mi-temps
+    if (originalData.confrontationHalftimeScores) {
+      const isInConfrontations = originalData.confrontationHalftimeScores
+        .some(item => item.score === score);
+      if (isInConfrontations) {
+        const coefficient = originalData.confrontationHalftimeScores
+          .find(item => item.score === score)?.coefficient;
+        if (coefficient) {
+          fitness += 30 + (coefficient < 5 ? 20 : coefficient < 10 ? 10 : 0);
+        }
+      }
+    }
+    
+    // Cohérence avec forces des équipes
+    const homeStrength = teamStats.homeTeam?.attackStrength || 0.5;
+    const awayStrength = teamStats.awayTeam?.attackStrength || 0.5;
+    
+    if (homeGoals > awayGoals && homeStrength > awayStrength) fitness += 15;
+    if (awayGoals > homeGoals && awayStrength > homeStrength) fitness += 15;
+    if (homeGoals === awayGoals && Math.abs(homeStrength - awayStrength) < 0.2) fitness += 10;
+    
+    // Cohérence avec odds si disponibles
+    if (originalData.scoreOdds) {
+      const matchingOdd = originalData.scoreOdds.find(odd => odd.score === score);
+      if (matchingOdd) {
+        const coefficient = parseFloat(matchingOdd.coefficient) || 10;
+        fitness += Math.max(0, 25 - coefficient); // Plus le coefficient est bas, plus le fitness augmente
+      }
+    }
+    
+    // Pénalité pour scores extrêmes sans justification
+    const totalGoals = homeGoals + awayGoals;
+    if (totalGoals > 5 && (homeStrength + awayStrength) < 1.2) fitness -= 10;
+    if (totalGoals === 0 && (homeStrength + awayStrength) > 1.4) fitness -= 5;
+    
+    return Math.max(0, fitness);
+  }
+  
+  // Sélection par tournoi
+  tournamentSelection(population, fitness, tournamentSize = 3) {
+    let bestIndex = Math.floor(Math.random() * population.length);
+    let bestFitness = fitness[bestIndex];
+    
+    for (let i = 1; i < tournamentSize; i++) {
+      const candidateIndex = Math.floor(Math.random() * population.length);
+      if (fitness[candidateIndex] > bestFitness) {
+        bestIndex = candidateIndex;
+        bestFitness = fitness[candidateIndex];
+      }
+    }
+    
+    return population[bestIndex];
+  }
+  
+  // Croisement génétique
+  crossover(parent1, parent2, originalData) {
+    const [h1, a1] = parent1.split('-').map(Number);
+    const [h2, a2] = parent2.split('-').map(Number);
+    
+    // Croisement avec priorité aux confrontations
+    if (originalData.confrontationHalftimeScores && Math.random() < 0.4) {
+      const confrontationScores = originalData.confrontationHalftimeScores
+        .map(item => item.score)
+        .filter(Boolean);
+      if (confrontationScores.length > 0) {
+        return confrontationScores[Math.floor(Math.random() * confrontationScores.length)];
+      }
+    }
+    
+    // Croisement standard
+    const childHome = Math.random() < 0.5 ? h1 : h2;
+    const childAway = Math.random() < 0.5 ? a1 : a2;
+    
+    return `${childHome}-${childAway}`;
+  }
+  
+  // Mutation génétique
+  mutate(score, originalData, teamStats) {
+    let [homeGoals, awayGoals] = score.split('-').map(Number);
+    
+    // Mutation guidée par les confrontations
+    if (originalData.confrontationHalftimeScores && Math.random() < 0.3) {
+      const confrontationScores = originalData.confrontationHalftimeScores
+        .map(item => item.score)
+        .filter(Boolean);
+      if (confrontationScores.length > 0) {
+        return confrontationScores[Math.floor(Math.random() * confrontationScores.length)];
+      }
+    }
+    
+    // Mutation standard
+    if (Math.random() < 0.5) {
+      homeGoals = Math.max(0, homeGoals + (Math.random() < 0.5 ? -1 : 1));
+    } else {
+      awayGoals = Math.max(0, awayGoals + (Math.random() < 0.5 ? -1 : 1));
+    }
+    
+    // Limitation des scores extrêmes
+    homeGoals = Math.min(6, homeGoals);
+    awayGoals = Math.min(6, awayGoals);
+    
+    return `${homeGoals}-${awayGoals}`;
+  }
+  
+  // Génération scores de base
+  generateBaseScores(homeStrength, awayStrength) {
+    const scores = [];
+    
+    // Scores typiques basés sur les forces
+    if (homeStrength > awayStrength + 0.2) {
+      scores.push('1-0', '2-0', '2-1', '1-0');
+    } else if (awayStrength > homeStrength + 0.2) {
+      scores.push('0-1', '0-2', '1-2', '0-1');
+    } else {
+      scores.push('1-1', '0-0', '1-0', '0-1', '2-1', '1-2');
+    }
+    
+    return scores;
+  }
+  
+  // Calcul diversité population
+  calculatePopulationDiversity(population) {
+    const unique = [...new Set(population)];
+    return (unique.length / population.length) * 100;
   }
 
 generateHalftimePredictionWithConfrontations(weightedResults, teamStats, confrontationAnalysis, originalData) {
