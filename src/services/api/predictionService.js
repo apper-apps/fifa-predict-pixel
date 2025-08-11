@@ -1059,27 +1059,26 @@ performAdvancedLiveAnalysis(prediction, scoreResult) {
     const currentMinute = scoreResult.minute || 0;
     
     return {
-      scoreProgression: this.trackAdvancedScoreProgression(currentScoreParts, predictedScoreParts, currentMinute),
+scoreProgression: this.trackAdvancedScoreProgression(currentScoreParts, predictedScoreParts, currentMinute),
       probabilityUpdate: this.updateAdvancedLiveProbabilities(prediction, scoreResult),
       nextGoalPrediction: this.predictAdvancedNextGoal(scoreResult, prediction),
       finalScoreForecast: this.forecastAdvancedFinalScore(prediction, scoreResult),
-finalScoreForecast: this.forecastAdvancedFinalScore(prediction, scoreResult),
       matchPhaseAnalysis: this.analyzeMatchPhase(currentMinute, currentScoreParts),
       momentumIndicators: this.calculateMomentumIndicators(scoreResult),
       criticalEventsPrediction: this.predictCriticalEvents(scoreResult, prediction)
     };
   }
 
-  trackAdvancedScoreProgression(currentScore, predictedScore, minute) {
+trackAdvancedScoreProgression(currentScore, predictedScore, minute) {
     const expectedProgression = this.calculateExpectedProgression(predictedScore, minute);
-    const progressionDelta = actualProgression.map((actual, i) => actual - expectedProgression[i]);
+    const progressionDelta = currentScore.map((actual, i) => actual - expectedProgression[i]);
     return {
       expected: expectedProgression,
-      actual: actualProgression,
+      actual: currentScore,
       delta: progressionDelta,
       progressionRate: this.calculateProgressionRate(progressionDelta, minute),
       catchUpProbability: this.calculateCatchUpProbability(progressionDelta, 90 - minute),
-      trendAnalysis: this.analyzeScoringTrend(actualProgression, minute)
+      trendAnalysis: this.analyzeScoringTrend(currentScore, minute)
     };
   }
 
