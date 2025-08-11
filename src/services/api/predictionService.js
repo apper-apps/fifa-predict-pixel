@@ -29,7 +29,8 @@ const highestId = this.predictions.reduce((max, p) => Math.max(max, p.Id), 0);
     const newPrediction = {
       Id: highestId + 1,
       ...enhancedPrediction,
-      confrontations: predictionData.confrontations || [],
+confrontations: predictionData.confrontations || [],
+      confrontationHalftimeScores: predictionData.confrontationHalftimeScores || [],
       timestamp: predictionData.timestamp || new Date().toISOString(),
       aiVersion: '3.2.0',
       analysisComplexity: 'confrontation_based_analysis',
@@ -55,7 +56,7 @@ async generateAIPrediction(matchData) {
     const oddsAnalysis = this.analyzeOddsPatternAdvanced(matchData.scoreOdds);
     const marketTrends = this.analyzeMarketTrends(matchData.scoreOdds);
     const scoreRangeAnalysis = this.analyzeScoreRangePatterns(matchData.scoreOdds);
-    const confrontationAnalysis = this.analyzeConfrontations(matchData.confrontations || []);
+const confrontationAnalysis = this.analyzeConfrontations(matchData.confrontations || [], matchData.confrontationHalftimeScores || []);
     
     // Algorithme d'IA avancé pour scores diversifiés
     const aiPrediction = this.calculateAdvancedAIPrediction({
@@ -174,57 +175,68 @@ calculateAdvancedAIPrediction({ teamStats, historicalData, oddsAnalysis, marketT
     };
   }
 
-  analyzeConfrontations(confrontations) {
+analyzeConfrontations(confrontations, halftimeScores) {
     if (!confrontations || confrontations.length === 0) {
       return {
         homeAdvantage: 0.5,
         strengthBalance: 0.5,
         tacticalEdge: 0.5,
-        confidence: 0.3
+        confidence: 0.3,
+        halftimeIntegration: 0.3
       };
     }
 
-    const analyses = confrontations.map(conf => {
-      const description = (conf.description || '').toLowerCase();
-      const analysis = (conf.analysis || '').toLowerCase();
+    const coefficientAnalyses = confrontations.map(conf => {
+      const coefficient = parseFloat(conf.coefficient) || 2.0;
       
+      // Analyse des coefficients pour déterminer les probabilités
+      const probability = 1 / coefficient;
       let homeAdvantage = 0.5;
-      let strengthFactor = 0.5;
+      let strengthFactor = probability;
       
-      // Analyse des mots-clés pour déterminer les avantages
-      if (analysis.includes('domicile') || analysis.includes('home')) {
-        homeAdvantage += 0.2;
-      }
-      if (analysis.includes('extérieur') || analysis.includes('away')) {
-        homeAdvantage -= 0.2;
-      }
-      if (analysis.includes('avantage')) {
-        strengthFactor += 0.15;
+      // Les faibles coefficients indiquent une probabilité élevée
+      if (coefficient < 2.0) {
+        homeAdvantage += 0.3;
+        strengthFactor += 0.2;
+      } else if (coefficient > 4.0) {
+        homeAdvantage -= 0.1;
+        strengthFactor -= 0.1;
       }
       
-      return { homeAdvantage, strengthFactor };
+      return { homeAdvantage, strengthFactor, probability };
     });
 
+    // Intégration des scores mi-temps si disponibles
+    let halftimeBonus = 0.3;
+    if (halftimeScores && halftimeScores.length >= 4) {
+      const avgHalftimeCoeff = halftimeScores.reduce((sum, score) => sum + parseFloat(score.coefficient || 2.0), 0) / halftimeScores.length;
+      halftimeBonus = Math.min(0.8, 1 / avgHalftimeCoeff);
+    }
+
     return {
-      homeAdvantage: Math.min(0.8, Math.max(0.2, analyses.reduce((sum, a) => sum + a.homeAdvantage, 0) / analyses.length)),
-      strengthBalance: analyses.reduce((sum, a) => sum + a.strengthFactor, 0) / analyses.length,
+      homeAdvantage: Math.min(0.8, Math.max(0.2, coefficientAnalyses.reduce((sum, a) => sum + a.homeAdvantage, 0) / coefficientAnalyses.length)),
+      strengthBalance: coefficientAnalyses.reduce((sum, a) => sum + a.strengthFactor, 0) / coefficientAnalyses.length,
       tacticalEdge: Math.random() * 0.3 + 0.5,
-      confidence: Math.min(confrontations.length / 4, 1) * 0.8 + 0.2
+      confidence: Math.min(confrontations.length / 5, 1) * 0.9 + 0.1,
+      halftimeIntegration: halftimeBonus,
+      avgProbability: coefficientAnalyses.reduce((sum, a) => sum + a.probability, 0) / coefficientAnalyses.length
     };
   }
 
-  confrontationBasedAlgorithm(confrontationAnalysis, teamStats) {
+confrontationBasedAlgorithm(confrontationAnalysis, teamStats) {
     const baseHomeGoals = parseFloat(teamStats.homeTeam.goalsPerMatch) || 1.5;
     const baseAwayGoals = parseFloat(teamStats.awayTeam.goalsPerMatch) || 1.2;
     
-    // Ajustement basé sur les confrontations
-    const homeGoals = Math.round(baseHomeGoals * confrontationAnalysis.homeAdvantage * confrontationAnalysis.strengthBalance);
-    const awayGoals = Math.round(baseAwayGoals * (2 - confrontationAnalysis.homeAdvantage) * confrontationAnalysis.tacticalEdge);
+    // Ajustement basé sur les coefficients des confrontations
+    const probabilityMultiplier = confrontationAnalysis.avgProbability || 0.5;
+    const homeGoals = Math.round(baseHomeGoals * confrontationAnalysis.homeAdvantage * confrontationAnalysis.strengthBalance * (1 + probabilityMultiplier));
+    const awayGoals = Math.round(baseAwayGoals * (2 - confrontationAnalysis.homeAdvantage) * confrontationAnalysis.tacticalEdge * (1 + probabilityMultiplier * 0.8));
     
     return {
       score: `${Math.max(0, homeGoals)}-${Math.max(0, awayGoals)}`,
-      confidence: 0.75 + confrontationAnalysis.confidence * 0.2,
-      algorithm: 'confrontation_based'
+      confidence: 0.75 + confrontationAnalysis.confidence * 0.2 + (confrontationAnalysis.halftimeIntegration || 0) * 0.05,
+      algorithm: 'coefficient_based_confrontation',
+      coefficientIntegration: true
     };
   }
 
@@ -1577,7 +1589,29 @@ wasRiskAssessedCorrectly(prediction, scoreResult) {
     };
   }
 
-  generateHalftimePredictionWithConfrontations(weightedResults, teamStats, confrontationAnalysis, originalData) {
+generateHalftimePredictionWithConfrontations(weightedResults, teamStats, confrontationAnalysis, originalData) {
+    // Priorité aux scores mi-temps des confrontations si disponibles
+    if (originalData.confrontationHalftimeScores && originalData.confrontationHalftimeScores.length >= 4) {
+      const confrontationHalftimeScores = originalData.confrontationHalftimeScores.map(odds => odds.score).filter(score => score && !score.includes('NaN'));
+      
+      if (confrontationHalftimeScores.length > 0) {
+        // Sélection basée sur les coefficients des confrontations
+        const coefficientWeighted = originalData.confrontationHalftimeScores
+          .filter(item => item.score && item.coefficient)
+          .sort((a, b) => a.coefficient - b.coefficient); // Tri par coefficient croissant (probabilité décroissante)
+        
+        const selectedScore = coefficientWeighted[0]?.score || confrontationHalftimeScores[0];
+        
+        return {
+          score: selectedScore,
+          confidence: 0.8 + (confrontationAnalysis?.confidence || 0.5) * 0.15,
+          algorithm: 'confrontation_halftime_coefficients',
+          source: 'confrontation_specific'
+        };
+      }
+    }
+
+    // Fallback vers les scores mi-temps standards
     if (!originalData.halftimeScoreOdds || originalData.halftimeScoreOdds.length === 0) {
       return this.generateHalftimePrediction(weightedResults, teamStats, originalData);
     }
@@ -1589,14 +1623,15 @@ wasRiskAssessedCorrectly(prediction, scoreResult) {
       return { score: '0-0', confidence: 0.5 };
     }
 
-    // Sélection basée sur l'analyse des confrontations
+    // Sélection basée sur l'analyse des confrontations avec bonus coefficient
     const confrontationBonus = confrontationAnalysis ? confrontationAnalysis.homeAdvantage : 0.5;
+    const halftimeIntegration = confrontationAnalysis?.halftimeIntegration || 0.3;
     const selectedIndex = Math.floor(confrontationBonus * halftimeScores.length);
     const selectedScore = halftimeScores[Math.min(selectedIndex, halftimeScores.length - 1)];
 
     return {
       score: selectedScore || '0-0',
-      confidence: 0.7 + (confrontationAnalysis?.confidence || 0.3) * 0.25,
+      confidence: 0.7 + (confrontationAnalysis?.confidence || 0.3) * 0.25 + halftimeIntegration * 0.05,
       algorithm: 'confrontation_enhanced_halftime'
     };
   }

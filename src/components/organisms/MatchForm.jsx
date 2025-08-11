@@ -13,9 +13,10 @@ const [formData, setFormData] = useState({
     awayTeam: "",
     matchDate: "",
     matchTime: "",
-scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
+    scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
     halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
-    confrontations: Array(4).fill({ description: "", analysis: "" }),
+    confrontations: Array(5).fill({ coefficient: "" }),
+    confrontationHalftimeScores: Array(4).fill({ score: "", coefficient: "" }),
     expectedHalftimeScore: ""
   });
 
@@ -36,11 +37,19 @@ const handleScoreOddsChange = (index, data) => {
     });
   };
 
-  const handleConfrontationChange = (index, field, value) => {
+const handleConfrontationChange = (index, value) => {
     setFormData(prev => {
       const newConfrontations = [...prev.confrontations];
-      newConfrontations[index] = { ...newConfrontations[index], [field]: value };
+      newConfrontations[index] = { coefficient: value };
       return { ...prev, confrontations: newConfrontations };
+    });
+  };
+
+  const handleConfrontationHalftimeChange = (index, data) => {
+    setFormData(prev => {
+      const newHalftimeScores = [...prev.confrontationHalftimeScores];
+      newHalftimeScores[index] = data;
+      return { ...prev, confrontationHalftimeScores: newHalftimeScores };
     });
   };
 
@@ -94,11 +103,18 @@ if (validHalftimeScoreOdds.length < 3) {
     }
 
     // Validation des confrontations
-    const validConfrontations = formData.confrontations.filter(conf => 
-      conf.description.trim() && conf.analysis.trim()
+const validConfrontations = formData.confrontations.filter(conf => 
+      conf.coefficient && !isNaN(conf.coefficient) && parseFloat(conf.coefficient) > 0
     );
-    if (validConfrontations.length < 2) {
-      newErrors.confrontations = "Minimum 2 confrontations entre équipes requises";
+    if (validConfrontations.length < 5) {
+      newErrors.confrontations = "Les 5 coefficients de confrontations sont requis";
+    }
+
+    const validConfrontationHalftime = formData.confrontationHalftimeScores.filter(
+      item => item.score && item.coefficient && !isNaN(item.coefficient)
+    );
+    if (validConfrontationHalftime.length < 4) {
+      newErrors.confrontationHalftimeScores = "4 scores mi-temps avec coefficients requis";
     }
 
     setErrors(newErrors);
@@ -143,9 +159,13 @@ const validScoreOdds = formData.scoreOdds.filter(
         coefficient: parseFloat(item.coefficient) || 1.0,
         probability: parseFloat(item.coefficient) > 0 ? ((1 / parseFloat(item.coefficient)) * 100).toFixed(1) : "0.0"
       })),
-      confrontations: validConfrontations.map(conf => ({
-        description: conf.description.trim(),
-        analysis: conf.analysis.trim()
+confrontations: validConfrontations.map(conf => ({
+        coefficient: parseFloat(conf.coefficient)
+      })),
+      confrontationHalftimeScores: validConfrontationHalftime.map(item => ({
+        score: item.score.trim(),
+        coefficient: parseFloat(item.coefficient) || 1.0,
+        probability: parseFloat(item.coefficient) > 0 ? ((1 / parseFloat(item.coefficient)) * 100).toFixed(1) : "0.0"
       })),
       expectedHalftimeScore: formData.expectedHalftimeScore.trim(),
       aiPreAnalysis: aiPreAnalysis
@@ -222,14 +242,15 @@ const validScoreOdds = formData.scoreOdds.filter(
   };
 
   const clearForm = () => {
-    setFormData({
-homeTeam: "",
+setFormData({
+      homeTeam: "",
       awayTeam: "",
       matchDate: "",
       matchTime: "",
       scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
-halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
-      confrontations: Array(4).fill({ description: "", analysis: "" }),
+      halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
+      confrontations: Array(5).fill({ coefficient: "" }),
+      confrontationHalftimeScores: Array(4).fill({ score: "", coefficient: "" }),
       expectedHalftimeScore: ""
     });
     setErrors({});
@@ -354,43 +375,64 @@ halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
           </div>
 
           {/* Section confrontations entre équipes */}
-          <div className="space-y-4">
+<div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <ApperIcon name="Users" size={20} className="text-accent" />
-              <h3 className="text-lg font-semibold text-white">Confrontations Entre Équipes (4 analyses)</h3>
+              <h3 className="text-lg font-semibold text-white">5 Confrontations Directes (Coefficients)</h3>
             </div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {formData.confrontations.map((confrontation, index) => (
                 <Card key={index} className="p-4 bg-surface/50">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      label={`Confrontation ${index + 1} - Description`}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Ex: Attaque vs Défense"
-                        value={confrontation.description}
-                        onChange={(e) => handleConfrontationChange(index, 'description', e.target.value)}
-                      />
-                    </FormField>
-                    <FormField
-                      label={`Analyse de la confrontation ${index + 1}`}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Ex: Avantage équipe domicile"
-                        value={confrontation.analysis}
-                        onChange={(e) => handleConfrontationChange(index, 'analysis', e.target.value)}
-                      />
-                    </FormField>
-                  </div>
+                  <FormField
+                    label={`Confrontation ${index + 1}`}
+                  >
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="1.01"
+                      placeholder="Ex: 2.50"
+                      value={confrontation.coefficient}
+                      onChange={(e) => handleConfrontationChange(index, e.target.value)}
+                    />
+                  </FormField>
                 </Card>
               ))}
             </div>
             {errors.confrontations && (
               <p className="text-sm text-error mt-1">{errors.confrontations}</p>
             )}
+          </div>
+
+          {/* Section scores mi-temps des confrontations */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <ApperIcon name="Clock" size={20} className="text-accent" />
+              <h3 className="text-lg font-semibold text-white">4 Scores Mi-temps Confrontations</h3>
+            </div>
+            
+            <ScoreOddsInput
+              title="Scores Exacts Mi-temps des Confrontations"
+              scoreOdds={formData.confrontationHalftimeScores}
+              onChange={(index, data) => handleConfrontationHalftimeChange(index, data)}
+              onAdd={() => {
+                if (formData.confrontationHalftimeScores.length < 6) {
+                  setFormData({
+                    ...formData,
+                    confrontationHalftimeScores: [...formData.confrontationHalftimeScores, { score: "", coefficient: "" }]
+                  });
+                }
+              }}
+              onRemove={(index) => {
+                if (formData.confrontationHalftimeScores.length > 4) {
+                  const newScores = formData.confrontationHalftimeScores.filter((_, i) => i !== index);
+                  setFormData({ ...formData, confrontationHalftimeScores: newScores });
+                }
+              }}
+              error={errors.confrontationHalftimeScores}
+              maxItems={6}
+              minItems={4}
+            />
           </div>
         <div className="border-t border-primary/20 pt-6">
           <div className="flex items-center justify-between mb-4">
