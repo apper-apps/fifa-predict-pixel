@@ -16,7 +16,6 @@ const [formData, setFormData] = useState({
     scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
     halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
     confrontations: Array(5).fill({ coefficient: "" }),
-    confrontationHalftimeScores: Array(4).fill({ score: "", coefficient: "" }),
     expectedHalftimeScore: ""
   });
 
@@ -45,13 +44,6 @@ const handleConfrontationChange = (index, value) => {
     });
   };
 
-  const handleConfrontationHalftimeChange = (index, data) => {
-    setFormData(prev => {
-      const newHalftimeScores = [...prev.confrontationHalftimeScores];
-      newHalftimeScores[index] = data;
-      return { ...prev, confrontationHalftimeScores: newHalftimeScores };
-    });
-  };
 
   const addScoreField = () => {
     if (formData.scoreOdds.length < 20) {
@@ -110,12 +102,6 @@ const validConfrontations = formData.confrontations.filter(conf =>
       newErrors.confrontations = "Les 5 coefficients de confrontations sont requis";
     }
 
-    const validConfrontationHalftime = formData.confrontationHalftimeScores.filter(
-      item => item.score && item.coefficient && !isNaN(item.coefficient)
-    );
-    if (validConfrontationHalftime.length < 4) {
-      newErrors.confrontationHalftimeScores = "4 scores mi-temps avec coefficients requis";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -145,9 +131,6 @@ const validConfrontations = formData.confrontations.filter(conf =>
       conf.description.trim() && conf.analysis.trim()
     );
 
-    const validConfrontationHalftime = (formData.confrontationHalftime || []).filter(
-      item => item.score && item.coefficient && !isNaN(item.coefficient)
-    );
     
     const matchData = {
       homeTeam: formData.homeTeam.trim(),
@@ -165,11 +148,6 @@ const validConfrontations = formData.confrontations.filter(conf =>
       })),
 confrontations: validConfrontations.map(conf => ({
         coefficient: parseFloat(conf.coefficient)
-      })),
-      confrontationHalftimeScores: validConfrontationHalftime.map(item => ({
-        score: item.score.trim(),
-        coefficient: parseFloat(item.coefficient) || 1.0,
-        probability: parseFloat(item.coefficient) > 0 ? ((1 / parseFloat(item.coefficient)) * 100).toFixed(1) : "0.0"
       })),
       expectedHalftimeScore: formData.expectedHalftimeScore.trim(),
       aiPreAnalysis: aiPreAnalysis
@@ -254,7 +232,6 @@ setFormData({
       scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
       halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
       confrontations: Array(5).fill({ coefficient: "" }),
-      confrontationHalftimeScores: Array(4).fill({ score: "", coefficient: "" }),
       expectedHalftimeScore: ""
     });
     setErrors({});
@@ -408,36 +385,6 @@ setFormData({
             )}
           </div>
 
-          {/* Section scores mi-temps des confrontations */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <ApperIcon name="Clock" size={20} className="text-accent" />
-              <h3 className="text-lg font-semibold text-white">4 Scores Mi-temps Confrontations</h3>
-            </div>
-            
-            <ScoreOddsInput
-              title="Scores Exacts Mi-temps des Confrontations"
-              scoreOdds={formData.confrontationHalftimeScores}
-              onChange={(index, data) => handleConfrontationHalftimeChange(index, data)}
-              onAdd={() => {
-                if (formData.confrontationHalftimeScores.length < 6) {
-                  setFormData({
-                    ...formData,
-                    confrontationHalftimeScores: [...formData.confrontationHalftimeScores, { score: "", coefficient: "" }]
-                  });
-                }
-              }}
-              onRemove={(index) => {
-                if (formData.confrontationHalftimeScores.length > 4) {
-                  const newScores = formData.confrontationHalftimeScores.filter((_, i) => i !== index);
-                  setFormData({ ...formData, confrontationHalftimeScores: newScores });
-                }
-              }}
-              error={errors.confrontationHalftimeScores}
-              maxItems={6}
-              minItems={4}
-            />
-          </div>
         <div className="border-t border-primary/20 pt-6">
           <div className="flex items-center justify-between mb-4">
             <div>
