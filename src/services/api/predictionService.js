@@ -1,6 +1,4 @@
 import { scoresService } from "./scoresService";
-import React from "react";
-import Error from "@/components/ui/Error";
 import predictionsData from "@/services/mockData/predictions.json";
 
 class PredictionService {
@@ -26,8 +24,7 @@ async create(predictionData) {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Plus de temps pour l'IA avancée
     
     // Analyse avancée avec IA pour scores diversifiés
-const enhancedPrediction = await this.generateAIPrediction(predictionData);
-    
+    const enhancedPrediction = await this.generateAIPrediction(predictionData);
     const highestId = this.predictions.reduce((max, p) => Math.max(max, p.Id), 0);
     const newPrediction = {
       Id: highestId + 1,
@@ -68,7 +65,7 @@ async generateAIPrediction(matchData) {
     });
     
     return {
-...matchData,
+      ...matchData,
       predictedScore: aiPrediction.mostLikelyScore,
       predictedHalftimeScore: aiPrediction.mostLikelyHalftimeScore,
       predictedWinner: aiPrediction.predictedWinner,
@@ -144,13 +141,13 @@ calculateAdvancedAIPrediction({ teamStats, historicalData, oddsAnalysis, marketT
     // Fusion avancée des résultats avec validation croisée
     const finalPrediction = this.advancedResultsCombination(weightedResults);
     const crossValidation = this.performCrossValidation(weightedResults);
-const extremeScoreValidation = this.validateExtremeScorePrediction(finalPrediction, scoreRangeAnalysis);
+    const extremeScoreValidation = this.validateExtremeScorePrediction(finalPrediction, scoreRangeAnalysis);
     
     // Generate halftime prediction using similar algorithm approach
     const halftimePrediction = this.generateHalftimePrediction(weightedResults, teamStats, originalData);
     
     return {
-mostLikelyScore: finalPrediction.score,
+      mostLikelyScore: finalPrediction.score,
       mostLikelyHalftimeScore: halftimePrediction?.score || this.generateHalftimeFromFullTime(finalPrediction.score),
       predictedWinner: this.determineWinner(finalPrediction.score),
       predictedHalftimeWinner: halftimePrediction ? this.determineWinner(halftimePrediction.score) : this.determineWinner(this.generateHalftimeFromFullTime(finalPrediction.score)),
@@ -285,9 +282,8 @@ enhancedStatisticalAnalysisAlgorithm(teamStats, historicalData, scoreRangeAnalys
     const awayDefensiveStrength = parseFloat(teamStats.awayTeam.defensiveStrength || 1.0);
     
     // Distribution de Poisson avancée pour les buts avec facteurs multiplicateurs
-let homeGoals = Math.round(homeAttackingStrength * (1 + teamStats.homeTeam.homeAdvantage) * (1 / awayDefensiveStrength));
+    let homeGoals = Math.round(homeAttackingStrength * (1 + teamStats.homeTeam.homeAdvantage) * (1 / awayDefensiveStrength));
     let awayGoals = Math.round(awayAttackingStrength * (1 - teamStats.homeTeam.homeAdvantage * 0.3) * (1 / homeDefensiveStrength));
-    
     // Génération des scores mi-temps (généralement plus bas)
     let homeHalftimeGoals = Math.round(homeGoals * (0.4 + Math.random() * 0.3));
     let awayHalftimeGoals = Math.round(awayGoals * (0.4 + Math.random() * 0.3));
@@ -305,9 +301,8 @@ let homeGoals = Math.round(homeAttackingStrength * (1 + teamStats.homeTeam.homeA
     awayGoals = Math.min(7, Math.max(0, awayGoals));
     homeHalftimeGoals = Math.min(4, Math.max(0, homeHalftimeGoals));
     awayHalftimeGoals = Math.min(4, Math.max(0, awayHalftimeGoals));
-    // Ajustement final basé sur les patterns historiques
+// Ajustement final basé sur les patterns historiques
     const historicalAdjustment = this.calculateHistoricalScoreAdjustment(homeGoals, awayGoals, historicalData);
-    
     return {
       score: `${homeGoals}-${awayGoals}`,
       confidence: 0.78 + (scoreRangeAnalysis?.diversity || 0) * 0.12,
@@ -477,7 +472,7 @@ async updateResult(id, actualScore) {
     }
     
     const prediction = this.predictions[index];
-const isCorrect = prediction.predictedScore === actualScore;
+    const isCorrect = prediction.predictedScore === actualScore;
     const actualWinner = this.determineWinner(actualScore);
     const isWinnerCorrect = prediction.predictedWinner === actualWinner;
     
@@ -565,7 +560,6 @@ const isCorrect = prediction.predictedScore === actualScore;
 
 async getAccuracyStats() {
     await new Promise(resolve => setTimeout(resolve, 200));
-    
     const completedPredictions = this.predictions.filter(p => p.actualResult);
     const totalPredictions = completedPredictions.length;
     const correctPredictions = completedPredictions.filter(p => p.actualResult.correct).length;
@@ -790,7 +784,7 @@ async checkScoresWith1XBET(predictionId) {
 
     try {
       const scoreResult = await scoresService.verifyPredictionResult(prediction);
-if (scoreResult.actualScore) {
+      if (scoreResult.actualScore) {
         // Match terminé - analyse IA complète pour scores diversifiés avec mi-temps
         const updatedPrediction = await this.updateResult(predictionId, scoreResult.actualScore);
         const comprehensiveAnalysis = this.generateComprehensivePostMatchAnalysis(updatedPrediction, scoreResult);
@@ -1069,15 +1063,15 @@ performAdvancedLiveAnalysis(prediction, scoreResult) {
       probabilityUpdate: this.updateAdvancedLiveProbabilities(prediction, scoreResult),
       nextGoalPrediction: this.predictAdvancedNextGoal(scoreResult, prediction),
       finalScoreForecast: this.forecastAdvancedFinalScore(prediction, scoreResult),
+finalScoreForecast: this.forecastAdvancedFinalScore(prediction, scoreResult),
       matchPhaseAnalysis: this.analyzeMatchPhase(currentMinute, currentScoreParts),
-momentumIndicators: this.calculateMomentumIndicators(scoreResult),
+      momentumIndicators: this.calculateMomentumIndicators(scoreResult),
       criticalEventsPrediction: this.predictCriticalEvents(scoreResult, prediction)
     };
   }
 
   trackAdvancedScoreProgression(currentScore, predictedScore, minute) {
     const expectedProgression = this.calculateExpectedProgression(predictedScore, minute);
-    const actualProgression = currentScore;
     const progressionDelta = actualProgression.map((actual, i) => actual - expectedProgression[i]);
     return {
       expected: expectedProgression,
@@ -1168,11 +1162,11 @@ momentumIndicators: this.calculateMomentumIndicators(scoreResult),
     };
   }
 
-  predictNextMatchEvents(scoreResult) {
+predictNextMatchEvents(scoreResult) {
     const minute = scoreResult.minute || 0;
     const currentScore = scoreResult.currentScore.split('-').map(Number);
     
-return {
+    return {
       nextGoal: this.predictAdvancedNextGoal(scoreResult, { predictedScore: '0-0' }),
       cardProbability: this.calculateCardProbability(minute),
       substitutionLikelihood: this.calculateSubstitutionLikelihood(minute),
@@ -2103,13 +2097,12 @@ generateAdvancedFallbackPrediction(prediction) {
   }
 
   identifyRealTimeRiskFactors(prediction, scoreResult) {
-    return [
-'time_pressure',
-      'score_difference',
+return [
+      'time_pressure',
+      'score_difference', 
       'momentum_shift'
     ];
   }
-
   // Additional missing utility methods for complete functionality
   analyzeContributingFactors(prediction) {
     return {
@@ -2233,11 +2226,10 @@ generateAdvancedFallbackPrediction(prediction) {
     };
   }
 
-  calculateAdvancedNextGoalProbability(currentScore, minute, scoringPatterns) {
+calculateAdvancedNextGoalProbability(currentScore, minute, scoringPatterns) {
     const baseProb = 0.3;
     const timeBonus = minute > 75 ? 0.1 : 0;
-return Math.min(0.8, baseProb + timeBonus);
+    return Math.min(0.8, baseProb + timeBonus);
   }
 }
-
 export const predictionService = new PredictionService();
