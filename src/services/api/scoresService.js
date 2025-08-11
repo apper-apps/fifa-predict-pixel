@@ -102,9 +102,10 @@ async verifyPredictionResult(prediction) {
       );
 
       if (score.status === 'finished' && score.finalScore) {
-        // Match terminé - analyse IA complète et apprentissage
+        // Match terminé - analyse IA complète pour scores diversifiés
         const comprehensiveAIValidation = this.performComprehensiveAIValidation(prediction, score);
         const accuracyAnalysis = this.performDetailedAccuracyAnalysis(prediction, score);
+        const extremeScoreAnalysis = this.analyzeExtremeScoreResult(prediction, score.finalScore);
         
         return {
           actualScore: score.finalScore,
@@ -113,16 +114,20 @@ async verifyPredictionResult(prediction) {
           confidence: prediction.confidence || 50,
           aiValidation: comprehensiveAIValidation,
           accuracyAnalysis: accuracyAnalysis,
+          extremeScoreAnalysis: extremeScoreAnalysis,
           predictionAccuracy: this.calculateAdvancedPredictionAccuracy(prediction, score.finalScore),
           learningData: this.extractComprehensiveLearningData(prediction, score),
           performanceMetrics: this.calculatePerformanceMetrics(prediction, score),
-          qualityAssessment: this.assessPredictionQuality(prediction, score),
-          improvementInsights: this.generateImprovementInsights(prediction, score)
+          qualityAssessment: this.assessAdvancedPredictionQuality(prediction, score),
+          improvementInsights: this.generateImprovementInsights(prediction, score),
+          scoreTypeAccuracy: this.assessScoreTypeAccuracy(prediction, score.finalScore),
+          diverseScoreLearning: this.extractDiverseScoreLearning(prediction, score.finalScore)
         };
       } else if (score.status === 'live' && score.currentScore) {
-        // Match en cours - analyse temps réel sophistiquée
+        // Match en cours - analyse temps réel sophistiquée pour scores diversifiés
         const advancedRealTimeAnalysis = this.performAdvancedRealTimeAnalysis(prediction, score);
         const dynamicPredictionUpdates = this.calculateDynamicPredictionUpdates(prediction, score);
+        const extremeScoreProjection = this.calculateExtremeScoreProjection(prediction, score);
         
         return {
           currentScore: score.currentScore,
@@ -130,28 +135,33 @@ async verifyPredictionResult(prediction) {
           minute: score.minute || 'N/A',
           predictionTracking: advancedRealTimeAnalysis,
           dynamicUpdates: dynamicPredictionUpdates,
+          extremeScoreProjection: extremeScoreProjection,
           liveProbabilities: this.calculateAdvancedLiveProbabilities(prediction, score),
           nextGoalLikelihood: this.predictAdvancedNextGoal(score, prediction),
           realTimeOptimization: this.performRealTimeOptimization(prediction, score),
           adaptiveConfidence: this.calculateAdaptiveConfidence(prediction, score),
           criticalMoments: this.identifyCriticalMoments(score),
-          predictionViability: this.assessLivePredictionViability(prediction, score)
+          predictionViability: this.assessLivePredictionViability(prediction, score),
+          highScoringPotential: this.assessHighScoringPotential(score, prediction)
         };
       } else {
-        // Match à venir - préparation IA avancée
+        // Match à venir - préparation IA avancée pour scores diversifiés
         const advancedPreMatchValidation = this.performAdvancedPreMatchValidation(prediction);
         const optimizationStatus = this.assessPreMatchOptimization(prediction);
+        const extremeScorePotential = this.assessExtremeScorePotential(prediction);
         
         return {
           matchStatus: 'à venir',
           scheduledTime: score.scheduledTime || prediction.dateTime || prediction.matchDateTime,
           predictionReadiness: advancedPreMatchValidation,
           optimizationStatus: optimizationStatus,
+          extremeScorePotential: extremeScorePotential,
           aiConfidence: prediction.confidence || 50,
           enhancedFactors: this.getEnhancedKeyFactors(prediction),
           realTimeFactors: prediction.realTimeFactors || {},
           algorithmStatus: this.getAlgorithmReadinessStatus(prediction),
-          confidenceFactors: this.analyzeConfidenceFactors(prediction)
+          confidenceFactors: this.analyzeConfidenceFactors(prediction),
+          scoreRangeCapability: prediction.scoreRangeCapability || 'standard'
         };
       }
     } catch (error) {
@@ -256,16 +266,17 @@ analyzeRealTimeProgression(prediction, currentScore) {
     };
   }
 
-  calculateAdvancedLiveProbabilities(prediction, currentScore) {
+calculateAdvancedLiveProbabilities(prediction, currentScore) {
     const timeRemaining = Math.max(0, 90 - (currentScore.minute || 0));
     const current = currentScore.currentScore.split('-').map(Number);
     const predicted = prediction.predictedScore.split('-').map(Number);
     const minute = currentScore.minute || 0;
     
-    // Algorithme avancé de probabilité avec facteurs multiples
-    const dynamicGoalRate = this.calculateDynamicGoalRate(minute, current);
+    // Algorithme avancé de probabilité avec support pour scores diversifiés
+    const dynamicGoalRate = this.calculateAdvancedDynamicGoalRate(minute, current);
     const momentumFactor = this.calculateMomentumFactor(currentScore);
     const contextualFactors = this.getContextualFactors(prediction, currentScore);
+    const extremeScoreFactors = this.calculateExtremeScoreFactors(current, predicted, timeRemaining);
     
     return {
       exactMatchProbability: this.calculateAdvancedExactMatchProbability(
@@ -274,12 +285,17 @@ analyzeRealTimeProgression(prediction, currentScore) {
       alternativeScenarios: this.calculateAdvancedAlternativeProbabilities(
         predicted, current, timeRemaining, contextualFactors
       ),
+      extremeScenarios: this.calculateExtremeScenarioProbabilities(
+        predicted, current, timeRemaining, extremeScoreFactors
+      ),
       confidenceAdjustment: this.calculateAdvancedLiveConfidence(
         prediction.confidence, current, predicted, timeRemaining, momentumFactor
       ),
       probabilityEvolution: this.trackProbabilityEvolution(prediction, currentScore),
       riskAssessment: this.assessLiveRiskFactors(predicted, current, timeRemaining),
-      opportunityWindows: this.identifyOpportunityWindows(currentScore, predicted)
+      opportunityWindows: this.identifyOpportunityWindows(currentScore, predicted),
+      highScoringProbability: this.calculateHighScoringProbability(current, timeRemaining),
+      extremeScoreProbability: extremeScoreFactors.probability
     };
   }
 
@@ -377,16 +393,296 @@ analyzeRealTimeProgression(prediction, currentScore) {
   }
 
   // Fonctions utilitaires pour l'analyse avancée
-  calculatePredictionAccuracy(prediction, actualScore) {
+calculateAdvancedPredictionAccuracy(prediction, actualScore) {
     const predicted = prediction.predictedScore.split('-').map(Number);
     const actual = actualScore.split('-').map(Number);
     
     const goalsDiff = Math.abs(predicted[0] - actual[0]) + Math.abs(predicted[1] - actual[1]);
+    const totalGoalsPredicted = predicted[0] + predicted[1];
+    const totalGoalsActual = actual[0] + actual[1];
+    const totalGoalsDiff = Math.abs(totalGoalsPredicted - totalGoalsActual);
     
-    if (goalsDiff === 0) return 100;
-    if (goalsDiff === 1) return 75;
-    if (goalsDiff === 2) return 50;
-    return Math.max(0, 25 - (goalsDiff * 5));
+    // Calcul de précision avec bonus pour scores extrêmes
+    let accuracy = 0;
+    if (goalsDiff === 0) accuracy = 100; // Score exact
+    else if (goalsDiff === 1) accuracy = 80; // Très proche
+    else if (goalsDiff === 2) accuracy = 65; // Proche
+    else if (goalsDiff === 3) accuracy = 45; // Acceptable
+    else if (goalsDiff === 4) accuracy = 30; // Moyen
+    else accuracy = Math.max(5, 25 - (goalsDiff * 3));
+    
+    // Bonus pour prédiction correcte de score extrême
+    if (this.isExtremeScore(actualScore) && this.isExtremeScore(prediction.predictedScore)) {
+      accuracy += 15;
+    }
+    
+    // Bonus pour prédiction correcte du type de match
+    if (totalGoalsDiff <= 1) {
+      accuracy += 5;
+    }
+    
+    return Math.min(100, accuracy);
+  }
+
+  isExtremeScore(score) {
+    const [home, away] = score.split('-').map(Number);
+    return home >= 4 || away >= 4 || (home + away) >= 6;
+  }
+
+  analyzeExtremeScoreResult(prediction, actualScore) {
+    const isActualExtreme = this.isExtremeScore(actualScore);
+    const isPredictedExtreme = this.isExtremeScore(prediction.predictedScore);
+    
+    return {
+      actualWasExtreme: isActualExtreme,
+      predictedAsExtreme: isPredictedExtreme,
+      extremeScoreDetectionAccuracy: isActualExtreme === isPredictedExtreme,
+      learningValue: isActualExtreme ? 'very_high' : 'standard',
+      scoreCategoryMatch: this.categorizeScore(actualScore) === this.categorizeScore(prediction.predictedScore)
+    };
+  }
+
+  categorizeScore(score) {
+    const [home, away] = score.split('-').map(Number);
+    const total = home + away;
+    
+    if (home >= 5 || away >= 5) return 'extreme';
+    if (total >= 5) return 'high_scoring';
+    if (total <= 2) return 'low_scoring';
+    return 'normal';
+  }
+
+  calculateExtremeScoreProjection(prediction, currentScore) {
+    const current = currentScore.currentScore.split('-').map(Number);
+    const currentTotal = current[0] + current[1];
+    const minute = currentScore.minute || 0;
+    const timeRemaining = Math.max(0, 90 - minute);
+    
+    // Projection pour score extrême basée sur le rythme actuel
+    const goalRate = currentTotal / Math.max(1, minute);
+    const projectedFinalGoals = goalRate * 90;
+    
+    const extremeProbability = Math.min(0.95, Math.max(0.05, 
+      (projectedFinalGoals >= 6 ? 0.7 : 0.2) +
+      (currentTotal >= 4 ? 0.3 : 0) +
+      (timeRemaining > 30 && goalRate > 0.06 ? 0.4 : 0)
+    ));
+    
+    return {
+      probability: Math.round(extremeProbability * 100),
+      projectedFinalScore: this.projectFinalScore(current, goalRate, timeRemaining),
+      confidenceLevel: extremeProbability > 0.6 ? 'high' : extremeProbability > 0.3 ? 'medium' : 'low',
+      keyIndicators: {
+        currentGoalRate: Math.round(goalRate * 1000) / 1000,
+        projectedTotalGoals: Math.round(projectedFinalGoals * 10) / 10,
+        timeRemaining: timeRemaining
+      }
+    };
+  }
+
+  projectFinalScore(current, goalRate, timeRemaining) {
+    const additionalGoalsHome = Math.round((goalRate * timeRemaining) * (current[0] / Math.max(1, current[0] + current[1])));
+    const additionalGoalsAway = Math.round((goalRate * timeRemaining) * (current[1] / Math.max(1, current[0] + current[1])));
+    
+    const finalHome = Math.min(8, current[0] + additionalGoalsHome);
+    const finalAway = Math.min(8, current[1] + additionalGoalsAway);
+    
+    return `${finalHome}-${finalAway}`;
+  }
+
+  calculateAdvancedDynamicGoalRate(minute, currentScore) {
+    // Taux de buts adaptatif avec support pour scores élevés
+    const baseRate = 0.033; // Légèrement plus élevé pour permettre scores plus hauts
+    const currentTotal = currentScore[0] + currentScore[1];
+    
+    // Multiplicateur basé sur la phase du match
+    let phaseMultiplier = 1.0;
+    if (minute < 15 || minute > 75) phaseMultiplier = 1.3; // Phases plus intenses
+    if (minute >= 45 && minute <= 50) phaseMultiplier = 0.7; // Mi-temps
+    if (minute >= 60 && minute <= 75) phaseMultiplier = 1.2; // Fin de match
+    
+    // Multiplicateur basé sur le score actuel
+    let scoreMultiplier = 1.0;
+    if (currentTotal >= 4) scoreMultiplier = 1.1; // Match déjà riche en buts
+    if (currentTotal >= 6) scoreMultiplier = 1.2; // Match très offensif
+    if (currentTotal <= 1 && minute > 60) scoreMultiplier = 1.3; // Urgence en fin de match
+    
+    return baseRate * phaseMultiplier * scoreMultiplier;
+  }
+
+  calculateExtremeScoreFactors(current, predicted, timeRemaining) {
+    const currentIsHigh = (current[0] + current[1]) >= 4;
+    const predictedIsHigh = (predicted[0] + predicted[1]) >= 4;
+    const maxGoalsCurrent = Math.max(current[0], current[1]);
+    const maxGoalsPredicted = Math.max(predicted[0], predicted[1]);
+    
+    let probability = 0.1; // Probabilité de base
+    
+    if (currentIsHigh) probability += 0.3;
+    if (predictedIsHigh) probability += 0.2;
+    if (maxGoalsCurrent >= 3) probability += 0.25;
+    if (maxGoalsPredicted >= 3) probability += 0.15;
+    if (timeRemaining > 30) probability += 0.1;
+    
+    return {
+      probability: Math.min(0.9, probability),
+      factors: {
+        currentHighScoring: currentIsHigh,
+        predictedHighScoring: predictedIsHigh,
+        maxCurrentGoals: maxGoalsCurrent,
+        timeAdvantage: timeRemaining > 30
+      }
+    };
+  }
+
+  calculateExtremeScenarioProbabilities(predicted, current, timeRemaining, extremeFactors) {
+    const scenarios = [];
+    
+    // Génération de scénarios extrêmes possibles
+    for (let h = Math.max(current[0], 4); h <= 7; h++) {
+      for (let a = Math.max(current[1], 0); a <= 7; a++) {
+        if (h >= 4 || a >= 4 || (h + a) >= 6) {
+          const probability = this.calculateScenarioProbability(
+            [h, a], current, timeRemaining, extremeFactors
+          );
+          
+          if (probability > 0.05) {
+            scenarios.push({
+              score: `${h}-${a}`,
+              probability: Math.round(probability * 100),
+              likelihood: probability > 0.3 ? 'high' : probability > 0.15 ? 'medium' : 'low'
+            });
+          }
+        }
+      }
+    }
+    
+    return scenarios.sort((a, b) => b.probability - a.probability).slice(0, 5);
+  }
+
+  calculateScenarioProbability(scenario, current, timeRemaining, extremeFactors) {
+    const goalsNeededHome = Math.max(0, scenario[0] - current[0]);
+    const goalsNeededAway = Math.max(0, scenario[1] - current[1]);
+    const totalGoalsNeeded = goalsNeededHome + goalsNeededAway;
+    
+    if (totalGoalsNeeded === 0) return current[0] === scenario[0] && current[1] === scenario[1] ? 1 : 0;
+    if (timeRemaining === 0) return 0;
+    
+    // Probabilité basée sur le temps restant et les facteurs extrêmes
+    const baseProb = Math.pow(0.85, totalGoalsNeeded) * (timeRemaining / 90);
+    const extremeBonus = extremeFactors.probability * 0.5;
+    
+    return Math.min(0.8, baseProb + extremeBonus);
+  }
+
+  calculateHighScoringProbability(current, timeRemaining) {
+    const currentTotal = current[0] + current[1];
+    const goalRate = currentTotal / Math.max(1, 90 - timeRemaining);
+    const projectedTotal = goalRate * 90;
+    
+    return Math.min(0.95, Math.max(0.05, 
+      (projectedTotal >= 5 ? 0.6 : 0.2) +
+      (currentTotal >= 3 ? 0.3 : 0) +
+      (timeRemaining > 20 ? 0.1 : 0)
+    ));
+  }
+
+  assessHighScoringPotential(score, prediction) {
+    const current = score.currentScore.split('-').map(Number);
+    const predicted = prediction.predictedScore.split('-').map(Number);
+    
+    return {
+      currentScoreIndicator: (current[0] + current[1]) >= 3 ? 'high' : 'normal',
+      predictedScoreType: (predicted[0] + predicted[1]) >= 4 ? 'high_scoring' : 'normal',
+      alignment: this.assessScoreAlignment(current, predicted),
+      potential: this.calculateHighScoringProbability(current, Math.max(0, 90 - (score.minute || 0)))
+    };
+  }
+
+  assessScoreAlignment(current, predicted) {
+    const currentTotal = current[0] + current[1];
+    const predictedTotal = predicted[0] + predicted[1];
+    
+    if (Math.abs(currentTotal - predictedTotal) <= 1) return 'excellent';
+    if (Math.abs(currentTotal - predictedTotal) <= 2) return 'good';
+    return 'moderate';
+  }
+
+  assessExtremeScorePotential(prediction) {
+    const predicted = prediction.predictedScore.split('-').map(Number);
+    const isExtremePredict = this.isExtremeScore(prediction.predictedScore);
+    
+    return {
+      predictedAsExtreme: isExtremePredict,
+      extremeConfidence: prediction.extremeScoreLikelihood || 0,
+      scoreRange: `0-7 goals per team`,
+      capability: prediction.scoreRangeCapability || 'enhanced',
+      algorithms: prediction.algorithmBreakdown?.length || 7
+    };
+  }
+
+  assessScoreTypeAccuracy(prediction, actualScore) {
+    const predictedCategory = this.categorizeScore(prediction.predictedScore);
+    const actualCategory = this.categorizeScore(actualScore);
+    
+    return {
+      predictedCategory,
+      actualCategory,
+      categoryMatch: predictedCategory === actualCategory,
+      accuracy: predictedCategory === actualCategory ? 100 : 
+                this.calculateCategorySimilarity(predictedCategory, actualCategory)
+    };
+  }
+
+  calculateCategorySimilarity(predicted, actual) {
+    const categories = ['low_scoring', 'normal', 'high_scoring', 'extreme'];
+    const predIndex = categories.indexOf(predicted);
+    const actualIndex = categories.indexOf(actual);
+    const distance = Math.abs(predIndex - actualIndex);
+    
+    return Math.max(0, 75 - (distance * 25));
+  }
+
+  extractDiverseScoreLearning(prediction, actualScore) {
+    return {
+      scoreType: this.categorizeScore(actualScore),
+      extremeScoreOccurred: this.isExtremeScore(actualScore),
+      predictionAdequacy: this.assessPredictionAdequacy(prediction, actualScore),
+      learningPriority: this.isExtremeScore(actualScore) ? 'high' : 'normal',
+      algorithmAdjustment: this.suggestAlgorithmAdjustment(prediction, actualScore)
+    };
+  }
+
+  assessPredictionAdequacy(prediction, actualScore) {
+    const accuracy = this.calculateAdvancedPredictionAccuracy(prediction, actualScore);
+    if (accuracy >= 90) return 'excellent';
+    if (accuracy >= 70) return 'good';
+    if (accuracy >= 50) return 'acceptable';
+    return 'needs_improvement';
+  }
+
+  suggestAlgorithmAdjustment(prediction, actualScore) {
+    const actualIsExtreme = this.isExtremeScore(actualScore);
+    const predictedExtreme = this.isExtremeScore(prediction.predictedScore);
+    
+    if (actualIsExtreme && !predictedExtreme) {
+      return 'increase_extreme_score_weight';
+    } else if (!actualIsExtreme && predictedExtreme) {
+      return 'decrease_extreme_score_weight';
+    }
+    return 'maintain_current_weights';
+  }
+
+  assessAdvancedPredictionQuality(prediction, score) {
+    const baseQuality = this.assessPredictionQuality(prediction, { actualScore: score.finalScore, correct: prediction.predictedScore === score.finalScore });
+    const extremeScoreBonus = this.isExtremeScore(score.finalScore) && this.isExtremeScore(prediction.predictedScore) ? 1 : 0;
+    
+    return {
+      ...baseQuality,
+      extremeScoreBonus,
+      enhancedQuality: extremeScoreBonus ? 'exceptional' : baseQuality.quality,
+      diverseScoreCapability: true
+    };
   }
 
   extractLearningData(prediction, score) {
