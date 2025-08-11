@@ -887,11 +887,14 @@ async checkScoresWith1XBET(predictionId) {
       const scoreResult = await scoresService.verifyPredictionResult(prediction);
       if (scoreResult.actualScore) {
         // Match terminé - analyse IA complète pour scores diversifiés avec mi-temps
-        const updatedPrediction = await this.updateResult(predictionId, scoreResult.actualScore);
+const updatedPrediction = await this.updateResult(predictionId, scoreResult.actualScore);
         const comprehensiveAnalysis = this.generateComprehensivePostMatchAnalysis(updatedPrediction, scoreResult);
         const extremeScoreAnalysis = this.analyzeExtremeScoreResult(scoreResult.actualScore);
         const winnerAnalysis = this.analyzeWinnerAccuracy(updatedPrediction, scoreResult);
         const halftimeAnalysis = scoreResult.actualHalftimeScore ? this.analyzeHalftimeAccuracy(updatedPrediction, scoreResult) : null;
+        
+        // Analyse spécialisée des 4 scores exacts mi-temps
+        const exactHalftimeAnalysis = this.analyzeExactHalftimeScores(updatedPrediction, scoreResult);
         
         // Mise à jour des algorithmes avec apprentissage automatique avancé
         await this.performAdvancedLearning(updatedPrediction, scoreResult);
@@ -910,6 +913,8 @@ async checkScoresWith1XBET(predictionId) {
           correct: scoreResult.correct,
           winnerCorrect: winnerCorrect,
           halftimeCorrect: halftimeAnalysis?.halftimeScoreCorrect,
+          exactHalftimeMatch: exactHalftimeAnalysis?.exactMatch,
+          halftimePredictionAccuracy: exactHalftimeAnalysis?.accuracy,
           halftimeWinnerCorrect: halftimeAnalysis?.halftimeWinnerCorrect,
           message: scoreResult.correct ? 
             `🎯 IA EXACTE ! Score ${scoreResult.actualScore} prédit avec ${prediction.confidence}% confiance ${winnerCorrect ? '+ Vainqueur correct ✓' : ''} ${isExtremeScore ? '(Score extrême détecté!)' : ''}` : 

@@ -92,8 +92,8 @@ homeTeam: matchData.homeTeam,
         } else if (scoreCheck.currentScore) {
           const liveAnalysis = scoreCheck.predictionTracking;
           toast.info(
-            `⚡ Match en direct: ${scoreCheck.currentScore} (${scoreCheck.minute}') | Viabilité: ${liveAnalysis?.predictionViability?.viabilityLevel || 'Évaluation'}`,
-            { autoClose: 4000 }
+`⚡ Match en direct: ${scoreCheck.currentScore} (${scoreCheck.minute}') | Mi-temps: ${scoreCheck.actualHalftimeScore || 'En cours'} | Viabilité: ${liveAnalysis?.predictionViability?.viabilityLevel || 'Évaluation'}`,
+            { autoClose: 5000 }
           );
         } else if (scoreCheck.predictionReadiness) {
           toast.info(

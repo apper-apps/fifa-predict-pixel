@@ -88,9 +88,9 @@ const checkScore = async (predictionId) => {
         }
         loadPredictions(); // Actualiser la liste
       } else if (result.status === 'en_cours') {
-        toast.info(
-          `⚡ LIVE: ${result.currentScore} (${result.minute}') | Proba ajustée: ${result.realTimePredictions?.adjustedPrediction || 'N/A'}`,
-          { autoClose: 3000 }
+toast.info(
+          `⚡ LIVE: ${result.currentScore} (${result.minute}') | Mi-temps: ${result.actualHalftimeScore || 'En cours'} | Proba ajustée: ${result.realTimePredictions?.adjustedPrediction || 'N/A'}`,
+          { autoClose: 4000 }
         );
       } else if (result.status === 'a_venir') {
         toast.info(

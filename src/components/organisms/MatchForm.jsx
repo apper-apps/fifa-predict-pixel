@@ -98,8 +98,8 @@ const validateForm = () => {
     const validHalftimeScoreOdds = formData.halftimeScoreOdds.filter(
       item => item.score && item.coefficient && !isNaN(item.coefficient)
     );
-if (validHalftimeScoreOdds.length < 3) {
-      newErrors.halftimeScoreOdds = "Minimum 3 scores mi-temps avec coefficients requis";
+if (validHalftimeScoreOdds.length < 4) {
+      newErrors.halftimeScoreOdds = "4 scores exacts mi-temps avec coefficients requis";
     }
 
     // Validation des confrontations
@@ -350,8 +350,8 @@ setFormData({
               </FormField>
             </div>
 
-            <ScoreOddsInput
-              title="Cotes Scores Mi-temps (4 scenarios)"
+<ScoreOddsInput
+              title="4 Scores Exacts Mi-temps (Obligatoire)"
               scoreOdds={formData.halftimeScoreOdds}
               onChange={(index, data) => {
                 const newHalftimeScoreOdds = [...formData.halftimeScoreOdds];
@@ -367,14 +367,14 @@ setFormData({
                 }
               }}
               onRemove={(index) => {
-                if (formData.halftimeScoreOdds.length > 3) {
+                if (formData.halftimeScoreOdds.length > 4) {
                   const newHalftimeScoreOdds = formData.halftimeScoreOdds.filter((_, i) => i !== index);
                   setFormData({ ...formData, halftimeScoreOdds: newHalftimeScoreOdds });
                 }
               }}
               error={errors.halftimeScoreOdds}
               maxItems={6}
-              minItems={3}
+              minItems={4}
             />
           </div>
 
