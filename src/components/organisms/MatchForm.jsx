@@ -13,9 +13,9 @@ const [formData, setFormData] = useState({
     awayTeam: "",
     matchDate: "",
     matchTime: "",
-    scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
-    halftimeScoreOdds: Array(3).fill({ score: "", coefficient: "" }),
-    expectedFullTimeScore: "",
+scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
+    halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
+    confrontations: Array(4).fill({ description: "", analysis: "" }),
     expectedHalftimeScore: ""
   });
 
@@ -28,11 +28,19 @@ const [formData, setFormData] = useState({
     }
   };
 
-  const handleScoreOddsChange = (index, data) => {
+const handleScoreOddsChange = (index, data) => {
     setFormData(prev => {
       const newScoreOdds = [...prev.scoreOdds];
       newScoreOdds[index] = data;
       return { ...prev, scoreOdds: newScoreOdds };
+    });
+  };
+
+  const handleConfrontationChange = (index, field, value) => {
+    setFormData(prev => {
+      const newConfrontations = [...prev.confrontations];
+      newConfrontations[index] = { ...newConfrontations[index], [field]: value };
+      return { ...prev, confrontations: newConfrontations };
     });
   };
 
@@ -81,9 +89,16 @@ const validateForm = () => {
     const validHalftimeScoreOdds = formData.halftimeScoreOdds.filter(
       item => item.score && item.coefficient && !isNaN(item.coefficient)
     );
+if (validHalftimeScoreOdds.length < 3) {
+      newErrors.halftimeScoreOdds = "Minimum 3 scores mi-temps avec coefficients requis";
+    }
 
-    if (validHalftimeScoreOdds.length < 2) {
-      newErrors.halftimeScoreOdds = "Minimum 2 scores mi-temps avec coefficients requis";
+    // Validation des confrontations
+    const validConfrontations = formData.confrontations.filter(conf => 
+      conf.description.trim() && conf.analysis.trim()
+    );
+    if (validConfrontations.length < 2) {
+      newErrors.confrontations = "Minimum 2 confrontations entre équipes requises";
     }
 
     setErrors(newErrors);
@@ -106,24 +121,32 @@ const validScoreOdds = formData.scoreOdds.filter(
       item => item.score && item.coefficient && !isNaN(item.coefficient)
     );
 
-    // Pré-analyse IA des données
+// Pré-analyse IA des données
     const aiPreAnalysis = await performPreAnalysis(formData.homeTeam, formData.awayTeam);
     
+    // Filtrer les confrontations valides
+    const validConfrontations = formData.confrontations.filter(conf => 
+      conf.description.trim() && conf.analysis.trim()
+    );
+    
     const matchData = {
-homeTeam: formData.homeTeam.trim(),
+      homeTeam: formData.homeTeam.trim(),
       awayTeam: formData.awayTeam.trim(),
       dateTime: `${formData.matchDate} ${formData.matchTime}`,
       scoreOdds: validScoreOdds.map(item => ({
         score: item.score.trim(),
-        coefficient: parseFloat(item.coefficient),
-        probability: ((1 / parseFloat(item.coefficient)) * 100).toFixed(1)
+        coefficient: parseFloat(item.coefficient) || 1.0,
+        probability: parseFloat(item.coefficient) > 0 ? ((1 / parseFloat(item.coefficient)) * 100).toFixed(1) : "0.0"
       })),
       halftimeScoreOdds: validHalftimeScoreOdds.map(item => ({
         score: item.score.trim(),
-        coefficient: parseFloat(item.coefficient),
-        probability: ((1 / parseFloat(item.coefficient)) * 100).toFixed(1)
+        coefficient: parseFloat(item.coefficient) || 1.0,
+        probability: parseFloat(item.coefficient) > 0 ? ((1 / parseFloat(item.coefficient)) * 100).toFixed(1) : "0.0"
       })),
-      expectedFullTimeScore: formData.expectedFullTimeScore.trim(),
+      confrontations: validConfrontations.map(conf => ({
+        description: conf.description.trim(),
+        analysis: conf.analysis.trim()
+      })),
       expectedHalftimeScore: formData.expectedHalftimeScore.trim(),
       aiPreAnalysis: aiPreAnalysis
     };
@@ -205,8 +228,8 @@ homeTeam: "",
       matchDate: "",
       matchTime: "",
       scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
-      halftimeScoreOdds: Array(3).fill({ score: "", coefficient: "" }),
-      expectedFullTimeScore: "",
+halftimeScoreOdds: Array(4).fill({ score: "", coefficient: "" }),
+      confrontations: Array(4).fill({ description: "", analysis: "" }),
       expectedHalftimeScore: ""
     });
     setErrors({});
@@ -288,7 +311,7 @@ homeTeam: "",
               <h3 className="text-lg font-semibold text-white">Scores Mi-temps</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="mb-4">
               <FormField
                 label="Score attendu mi-temps"
                 error={errors.expectedHalftimeScore}
@@ -300,22 +323,10 @@ homeTeam: "",
                   onChange={(e) => handleInputChange('expectedHalftimeScore', e.target.value)}
                 />
               </FormField>
-              
-              <FormField
-                label="Score attendu temps complet"
-                error={errors.expectedFullTimeScore}
-              >
-                <Input
-                  type="text"
-                  placeholder="Ex: 2-1"
-                  value={formData.expectedFullTimeScore}
-                  onChange={(e) => handleInputChange('expectedFullTimeScore', e.target.value)}
-                />
-              </FormField>
             </div>
 
             <ScoreOddsInput
-              title="Cotes Scores Mi-temps"
+              title="Cotes Scores Mi-temps (4 scenarios)"
               scoreOdds={formData.halftimeScoreOdds}
               onChange={(index, data) => {
                 const newHalftimeScoreOdds = [...formData.halftimeScoreOdds];
@@ -323,7 +334,7 @@ homeTeam: "",
                 setFormData({ ...formData, halftimeScoreOdds: newHalftimeScoreOdds });
               }}
               onAdd={() => {
-                if (formData.halftimeScoreOdds.length < 5) {
+                if (formData.halftimeScoreOdds.length < 6) {
                   setFormData({
                     ...formData,
                     halftimeScoreOdds: [...formData.halftimeScoreOdds, { score: "", coefficient: "" }]
@@ -331,15 +342,55 @@ homeTeam: "",
                 }
               }}
               onRemove={(index) => {
-                if (formData.halftimeScoreOdds.length > 2) {
+                if (formData.halftimeScoreOdds.length > 3) {
                   const newHalftimeScoreOdds = formData.halftimeScoreOdds.filter((_, i) => i !== index);
                   setFormData({ ...formData, halftimeScoreOdds: newHalftimeScoreOdds });
                 }
               }}
               error={errors.halftimeScoreOdds}
-              maxItems={5}
-              minItems={2}
+              maxItems={6}
+              minItems={3}
             />
+          </div>
+
+          {/* Section confrontations entre équipes */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <ApperIcon name="Users" size={20} className="text-accent" />
+              <h3 className="text-lg font-semibold text-white">Confrontations Entre Équipes (4 analyses)</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {formData.confrontations.map((confrontation, index) => (
+                <Card key={index} className="p-4 bg-surface/50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      label={`Confrontation ${index + 1} - Description`}
+                    >
+                      <Input
+                        type="text"
+                        placeholder="Ex: Attaque vs Défense"
+                        value={confrontation.description}
+                        onChange={(e) => handleConfrontationChange(index, 'description', e.target.value)}
+                      />
+                    </FormField>
+                    <FormField
+                      label={`Analyse de la confrontation ${index + 1}`}
+                    >
+                      <Input
+                        type="text"
+                        placeholder="Ex: Avantage équipe domicile"
+                        value={confrontation.analysis}
+                        onChange={(e) => handleConfrontationChange(index, 'analysis', e.target.value)}
+                      />
+                    </FormField>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            {errors.confrontations && (
+              <p className="text-sm text-error mt-1">{errors.confrontations}</p>
+            )}
           </div>
         <div className="border-t border-primary/20 pt-6">
           <div className="flex items-center justify-between mb-4">

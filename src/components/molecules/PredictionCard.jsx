@@ -73,12 +73,11 @@ const PredictionCard = ({ prediction, isLoading }) => {
 
         <div className="text-center mb-6">
           <div className="text-4xl font-display font-bold gradient-text mb-2 animate-glow">
-            {prediction.predictedScore}
+{prediction.predictedScore && !prediction.predictedScore.includes('NaN') ? prediction.predictedScore : 'N/A'}
           </div>
-<p className="text-sm text-gray-400">Score exact prédit</p>
+          <p className="text-sm text-gray-400">Score exact prédit</p>
         </div>
-        
-        {prediction.predictedHalftimeScore && (
+{prediction.predictedHalftimeScore && !prediction.predictedHalftimeScore.includes('NaN') && (
           <div className="text-center">
             <div className="text-3xl font-bold text-accent mb-2">
               {prediction.predictedHalftimeScore}

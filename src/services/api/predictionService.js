@@ -25,16 +25,18 @@ async create(predictionData) {
     
     // Analyse avancée avec IA pour scores diversifiés
     const enhancedPrediction = await this.generateAIPrediction(predictionData);
-    const highestId = this.predictions.reduce((max, p) => Math.max(max, p.Id), 0);
+const highestId = this.predictions.reduce((max, p) => Math.max(max, p.Id), 0);
     const newPrediction = {
       Id: highestId + 1,
       ...enhancedPrediction,
+      confrontations: predictionData.confrontations || [],
       timestamp: predictionData.timestamp || new Date().toISOString(),
-      aiVersion: '3.1.0',
-      analysisComplexity: 'halftime_fulltime_capable',
-      scoreRangeCapability: 'enhanced_with_periods',
+      aiVersion: '3.2.0',
+      analysisComplexity: 'confrontation_based_analysis',
+      scoreRangeCapability: 'enhanced_with_confrontations',
       diverseScoreSupport: true,
       halftimeSupport: true,
+      confrontationAnalysis: true,
       winnerPredictionCapability: true
     };
     
@@ -53,6 +55,7 @@ async generateAIPrediction(matchData) {
     const oddsAnalysis = this.analyzeOddsPatternAdvanced(matchData.scoreOdds);
     const marketTrends = this.analyzeMarketTrends(matchData.scoreOdds);
     const scoreRangeAnalysis = this.analyzeScoreRangePatterns(matchData.scoreOdds);
+    const confrontationAnalysis = this.analyzeConfrontations(matchData.confrontations || []);
     
     // Algorithme d'IA avancé pour scores diversifiés
     const aiPrediction = this.calculateAdvancedAIPrediction({
@@ -117,50 +120,111 @@ async generateAIPrediction(matchData) {
     };
   }
 
-calculateAdvancedAIPrediction({ teamStats, historicalData, oddsAnalysis, marketTrends, scoreRangeAnalysis, originalData }) {
-    // Algorithmes IA avancés pour scores diversifiés
+calculateAdvancedAIPrediction({ teamStats, historicalData, oddsAnalysis, marketTrends, scoreRangeAnalysis, confrontationAnalysis, originalData }) {
+    // Algorithmes IA avancés avec analyse des confrontations
     const algorithms = [
       this.probabilityBasedAlgorithm(teamStats, oddsAnalysis),
-      this.enhancedStatisticalAnalysisAlgorithm(teamStats, historicalData, scoreRangeAnalysis),
+      this.confrontationBasedAlgorithm(confrontationAnalysis, teamStats),
+      this.enhancedStatisticalAnalysisAlgorithm(teamStats, historicalData, scoreRangeAnalysis, confrontationAnalysis),
       this.marketSentimentAlgorithm(marketTrends, oddsAnalysis),
       this.advancedPatternRecognitionAlgorithm(historicalData, teamStats, scoreRangeAnalysis),
       this.realTimeContextAlgorithmAdvanced(teamStats, oddsAnalysis, originalData),
-      this.enhancedNeuralNetworkSimulation(teamStats, historicalData, oddsAnalysis, scoreRangeAnalysis),
-      this.extremeScoreDetectionAlgorithm(teamStats, scoreRangeAnalysis)
+      this.enhancedNeuralNetworkSimulation(teamStats, historicalData, oddsAnalysis, scoreRangeAnalysis)
     ];
     
-    // Pondération dynamique basée sur la performance historique
+    // Filtrer les résultats invalides (NaN, undefined)
+    const validAlgorithms = algorithms.filter(result => 
+      result && result.score && !result.score.includes('NaN') && result.confidence && !isNaN(result.confidence)
+    );
+    
+    // Pondération dynamique basée sur la performance historique et les confrontations
     const algorithmPerformance = this.getAlgorithmPerformanceHistory();
-    const weightedResults = algorithms.map((result, index) => ({
+    const weightedResults = validAlgorithms.map((result, index) => ({
       ...result,
       weight: this.getDynamicAlgorithmWeight(index, algorithmPerformance, teamStats),
       reliability: this.calculateAlgorithmReliability(index, teamStats),
-      scoreRangeReliability: this.calculateScoreRangeReliability(result, scoreRangeAnalysis)
+      confrontationReliability: this.calculateConfrontationReliability(result, confrontationAnalysis)
     }));
     
     // Fusion avancée des résultats avec validation croisée
     const finalPrediction = this.advancedResultsCombination(weightedResults);
     const crossValidation = this.performCrossValidation(weightedResults);
-    const extremeScoreValidation = this.validateExtremeScorePrediction(finalPrediction, scoreRangeAnalysis);
     
-    // Generate halftime prediction using similar algorithm approach
-    const halftimePrediction = this.generateHalftimePrediction(weightedResults, teamStats, originalData);
+    // Validation anti-NaN
+    if (!finalPrediction?.score || finalPrediction.score.includes('NaN')) {
+      finalPrediction.score = this.generateFallbackScore(teamStats);
+    }
+    
+    // Generate halftime prediction using confrontation data
+    const halftimePrediction = this.generateHalftimePredictionWithConfrontations(weightedResults, teamStats, confrontationAnalysis, originalData);
     
     return {
       mostLikelyScore: finalPrediction.score,
       mostLikelyHalftimeScore: halftimePrediction?.score || this.generateHalftimeFromFullTime(finalPrediction.score),
       predictedWinner: this.determineWinner(finalPrediction.score),
       predictedHalftimeWinner: halftimePrediction ? this.determineWinner(halftimePrediction.score) : this.determineWinner(this.generateHalftimeFromFullTime(finalPrediction.score)),
-      confidence: this.calculateEnhancedConfidence(finalPrediction, teamStats, crossValidation),
-      halftimeConfidence: halftimePrediction ? this.calculateEnhancedConfidence(halftimePrediction, teamStats, crossValidation) : Math.round(this.calculateEnhancedConfidence(finalPrediction, teamStats, crossValidation) * 0.85),
-      analysis: this.generateAdvancedAnalysisReport(teamStats, finalPrediction, algorithms, halftimePrediction),
+      confidence: Math.min(95, Math.max(45, this.calculateEnhancedConfidence(finalPrediction, teamStats, crossValidation))),
+      halftimeConfidence: halftimePrediction ? Math.min(90, Math.max(40, this.calculateEnhancedConfidence(halftimePrediction, teamStats, crossValidation))) : Math.round(this.calculateEnhancedConfidence(finalPrediction, teamStats, crossValidation) * 0.85),
+      analysis: this.generateAdvancedAnalysisReport(teamStats, finalPrediction, algorithms, halftimePrediction, confrontationAnalysis),
       alternatives: this.getEnhancedAlternativeScenarios(weightedResults),
       riskAssessment: this.assessAdvancedPredictionRisk(finalPrediction, teamStats),
       algorithmBreakdown: this.generateAlgorithmBreakdown(weightedResults),
-      realTimeFactors: this.extractRealTimeFactors(originalData),
-      scoreRangeInsights: this.generateScoreRangeInsights(scoreRangeAnalysis),
-      extremeScoreProbability: extremeScoreValidation.probability,
-      diverseScoreOptions: this.generateDiverseScoreOptions(weightedResults)
+      confrontationInsights: this.generateConfrontationInsights(confrontationAnalysis),
+      realTimeFactors: this.extractRealTimeFactors(originalData)
+    };
+  }
+
+  analyzeConfrontations(confrontations) {
+    if (!confrontations || confrontations.length === 0) {
+      return {
+        homeAdvantage: 0.5,
+        strengthBalance: 0.5,
+        tacticalEdge: 0.5,
+        confidence: 0.3
+      };
+    }
+
+    const analyses = confrontations.map(conf => {
+      const description = (conf.description || '').toLowerCase();
+      const analysis = (conf.analysis || '').toLowerCase();
+      
+      let homeAdvantage = 0.5;
+      let strengthFactor = 0.5;
+      
+      // Analyse des mots-clés pour déterminer les avantages
+      if (analysis.includes('domicile') || analysis.includes('home')) {
+        homeAdvantage += 0.2;
+      }
+      if (analysis.includes('extérieur') || analysis.includes('away')) {
+        homeAdvantage -= 0.2;
+      }
+      if (analysis.includes('avantage')) {
+        strengthFactor += 0.15;
+      }
+      
+      return { homeAdvantage, strengthFactor };
+    });
+
+    return {
+      homeAdvantage: Math.min(0.8, Math.max(0.2, analyses.reduce((sum, a) => sum + a.homeAdvantage, 0) / analyses.length)),
+      strengthBalance: analyses.reduce((sum, a) => sum + a.strengthFactor, 0) / analyses.length,
+      tacticalEdge: Math.random() * 0.3 + 0.5,
+      confidence: Math.min(confrontations.length / 4, 1) * 0.8 + 0.2
+    };
+  }
+
+  confrontationBasedAlgorithm(confrontationAnalysis, teamStats) {
+    const baseHomeGoals = parseFloat(teamStats.homeTeam.goalsPerMatch) || 1.5;
+    const baseAwayGoals = parseFloat(teamStats.awayTeam.goalsPerMatch) || 1.2;
+    
+    // Ajustement basé sur les confrontations
+    const homeGoals = Math.round(baseHomeGoals * confrontationAnalysis.homeAdvantage * confrontationAnalysis.strengthBalance);
+    const awayGoals = Math.round(baseAwayGoals * (2 - confrontationAnalysis.homeAdvantage) * confrontationAnalysis.tacticalEdge);
+    
+    return {
+      score: `${Math.max(0, homeGoals)}-${Math.max(0, awayGoals)}`,
+      confidence: 0.75 + confrontationAnalysis.confidence * 0.2,
+      algorithm: 'confrontation_based'
     };
   }
 
@@ -271,50 +335,73 @@ enhancedNeuralNetworkSimulation(teamStats, historicalData, oddsAnalysis, scoreRa
     return adjustedScores.sort((a, b) => b.adjustedProbability - a.adjustedProbability)[0];
   }
 
-enhancedStatisticalAnalysisAlgorithm(teamStats, historicalData, scoreRangeAnalysis) {
-    const avgGoalsHome = parseFloat(teamStats.homeTeam.goalsPerMatch);
-    const avgGoalsAway = parseFloat(teamStats.awayTeam.goalsPerMatch);
+enhancedStatisticalAnalysisAlgorithm(teamStats, historicalData, scoreRangeAnalysis, confrontationAnalysis) {
+    const avgGoalsHome = parseFloat(teamStats.homeTeam.goalsPerMatch) || 1.5;
+    const avgGoalsAway = parseFloat(teamStats.awayTeam.goalsPerMatch) || 1.2;
     
-    // Analyse statistique avancée pour scores diversifiés
-    const homeAttackingStrength = parseFloat(teamStats.homeTeam.attackingStrength || avgGoalsHome);
-    const awayAttackingStrength = parseFloat(teamStats.awayTeam.attackingStrength || avgGoalsAway);
-    const homeDefensiveStrength = parseFloat(teamStats.homeTeam.defensiveStrength || 1.0);
-    const awayDefensiveStrength = parseFloat(teamStats.awayTeam.defensiveStrength || 1.0);
+    // Validation des entrées pour éviter NaN
+    const homeAttackingStrength = parseFloat(teamStats.homeTeam.attackingStrength) || avgGoalsHome;
+    const awayAttackingStrength = parseFloat(teamStats.awayTeam.attackingStrength) || avgGoalsAway;
+    const homeDefensiveStrength = parseFloat(teamStats.homeTeam.defensiveStrength) || 1.0;
+    const awayDefensiveStrength = parseFloat(teamStats.awayTeam.defensiveStrength) || 1.0;
+    const homeAdvantage = parseFloat(teamStats.homeTeam.homeAdvantage) || 0.15;
     
-    // Distribution de Poisson avancée pour les buts avec facteurs multiplicateurs
-    let homeGoals = Math.round(homeAttackingStrength * (1 + teamStats.homeTeam.homeAdvantage) * (1 / awayDefensiveStrength));
-    let awayGoals = Math.round(awayAttackingStrength * (1 - teamStats.homeTeam.homeAdvantage * 0.3) * (1 / homeDefensiveStrength));
-    // Génération des scores mi-temps (généralement plus bas)
-    let homeHalftimeGoals = Math.round(homeGoals * (0.4 + Math.random() * 0.3));
-    let awayHalftimeGoals = Math.round(awayGoals * (0.4 + Math.random() * 0.3));
+    // Facteur de confrontation
+    const confrontationFactor = confrontationAnalysis ? confrontationAnalysis.homeAdvantage : 0.5;
+    
+    // Distribution de Poisson avancée avec validation anti-NaN
+    let homeGoals = Math.round(homeAttackingStrength * (1 + homeAdvantage) * (1 / Math.max(0.5, awayDefensiveStrength)) * confrontationFactor);
+    let awayGoals = Math.round(awayAttackingStrength * (1 - homeAdvantage * 0.3) * (1 / Math.max(0.5, homeDefensiveStrength)) * (2 - confrontationFactor));
     
     // Ajustement pour matches à fort potentiel offensif
     if (scoreRangeAnalysis && scoreRangeAnalysis.highScoringLikelihood > 0.6) {
       homeGoals = Math.round(homeGoals * (1.2 + Math.random() * 0.3));
       awayGoals = Math.round(awayGoals * (1.2 + Math.random() * 0.3));
-      homeHalftimeGoals = Math.round(homeHalftimeGoals * (1.1 + Math.random() * 0.2));
-      awayHalftimeGoals = Math.round(awayHalftimeGoals * (1.1 + Math.random() * 0.2));
     }
     
-    // Limite les scores extrêmement élevés mais permet une plus grande variété
-    homeGoals = Math.min(7, Math.max(0, homeGoals));
-    awayGoals = Math.min(7, Math.max(0, awayGoals));
-    homeHalftimeGoals = Math.min(4, Math.max(0, homeHalftimeGoals));
-    awayHalftimeGoals = Math.min(4, Math.max(0, awayHalftimeGoals));
-// Ajustement final basé sur les patterns historiques
+    // Validation finale et limites
+    homeGoals = Math.min(6, Math.max(0, homeGoals || 1));
+    awayGoals = Math.min(6, Math.max(0, awayGoals || 0));
+    
+    // Ajustement final basé sur les patterns historiques
     const historicalAdjustment = this.calculateHistoricalScoreAdjustment(homeGoals, awayGoals, historicalData);
+    
     return {
       score: `${homeGoals}-${awayGoals}`,
-      confidence: 0.78 + (scoreRangeAnalysis?.diversity || 0) * 0.12,
-      algorithm: 'enhanced_statistical',
+      confidence: Math.min(0.92, 0.78 + (scoreRangeAnalysis?.diversity || 0) * 0.12 + (confrontationAnalysis?.confidence || 0) * 0.02),
+      algorithm: 'enhanced_statistical_with_confrontations',
       scoreComponents: {
         homeAttacking: homeAttackingStrength,
         awayAttacking: awayAttackingStrength,
         homeDefensive: homeDefensiveStrength,
-        awayDefensive: awayDefensiveStrength
+        awayDefensive: awayDefensiveStrength,
+        confrontationFactor: confrontationFactor
       },
       historicalAdjustment: historicalAdjustment
     };
+  }
+
+  generateFallbackScore(teamStats) {
+    const homeGoals = Math.round(parseFloat(teamStats.homeTeam.goalsPerMatch) || 1.5);
+    const awayGoals = Math.round(parseFloat(teamStats.awayTeam.goalsPerMatch) || 1.2);
+    return `${Math.max(0, homeGoals)}-${Math.max(0, awayGoals)}`;
+  }
+
+  calculateConfrontationReliability(result, confrontationAnalysis) {
+    if (!confrontationAnalysis) return 0.5;
+    return confrontationAnalysis.confidence * 0.8 + 0.2;
+  }
+
+  generateConfrontationInsights(confrontationAnalysis) {
+    if (!confrontationAnalysis) {
+      return ["Analyse limitée sans données de confrontation"];
+    }
+    
+    return [
+      `Avantage domicile évalué à ${(confrontationAnalysis.homeAdvantage * 100).toFixed(0)}%`,
+      `Équilibre des forces: ${(confrontationAnalysis.strengthBalance * 100).toFixed(0)}%`,
+      `Avantage tactique: ${(confrontationAnalysis.tacticalEdge * 100).toFixed(0)}%`
+    ];
   }
 
   marketSentimentAlgorithm(marketTrends, oddsAnalysis) {
@@ -899,14 +986,25 @@ generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
   }
 
   // Nouvelles méthodes pour support mi-temps et vainqueurs
-  generateHalftimeFromFullTime(fullTimeScore) {
+generateHalftimeFromFullTime(fullTimeScore) {
     if (!fullTimeScore || typeof fullTimeScore !== 'string') return '0-0';
-    const [homeGoals, awayGoals] = fullTimeScore.split('-').map(s => parseInt(s.trim()));
+    
+    // Validation supplémentaire contre les scores invalides
+    if (fullTimeScore.includes('NaN') || fullTimeScore.includes('undefined')) {
+      return '0-0';
+    }
+    
+    const parts = fullTimeScore.split('-');
+    if (parts.length !== 2) return '0-0';
+    
+    const homeGoals = parseInt(parts[0].trim());
+    const awayGoals = parseInt(parts[1].trim());
+    
     if (isNaN(homeGoals) || isNaN(awayGoals)) return '0-0';
     
     // Génère un score mi-temps plausible (généralement plus bas)
-    const homeHT = Math.round(homeGoals * (0.4 + Math.random() * 0.4));
-    const awayHT = Math.round(awayGoals * (0.4 + Math.random() * 0.4));
+    const homeHT = Math.round(homeGoals * (0.35 + Math.random() * 0.35));
+    const awayHT = Math.round(awayGoals * (0.35 + Math.random() * 0.35));
     
     return `${Math.max(0, homeHT)}-${Math.max(0, awayHT)}`;
   }
@@ -1441,7 +1539,7 @@ wasRiskAssessedCorrectly(prediction, scoreResult) {
   }
 
   async getHistoricalMatchData(homeTeam, awayTeam) {
-    // Simulate historical match data retrieval
+// Simulate historical match data retrieval
     await new Promise(resolve => setTimeout(resolve, 100));
     
     return {
@@ -1451,7 +1549,8 @@ wasRiskAssessedCorrectly(prediction, scoreResult) {
       draws: Math.floor(Math.random() * 5) + 1,
       averageGoalsHome: (Math.random() * 2 + 1).toFixed(1),
       averageGoalsAway: (Math.random() * 2 + 1).toFixed(1),
-      lastFiveResults: this.generateLastFiveResults()
+      lastFiveResults: this.generateLastFiveResults(),
+      confrontationHistory: this.generateConfrontationHistory()
     };
   }
 
@@ -1461,10 +1560,45 @@ wasRiskAssessedCorrectly(prediction, scoreResult) {
       results.push({
         homeGoals: Math.floor(Math.random() * 4),
         awayGoals: Math.floor(Math.random() * 4),
+        halftimeHomeGoals: Math.floor(Math.random() * 2),
+        halftimeAwayGoals: Math.floor(Math.random() * 2),
         date: new Date(Date.now() - (i * 7 * 24 * 60 * 60 * 1000)).toISOString()
       });
     }
     return results;
+  }
+
+  generateConfrontationHistory() {
+    return {
+      homeAdvantageRate: 0.4 + Math.random() * 0.4,
+      averageGoalsInConfrontations: 2.1 + Math.random() * 1.5,
+      tacticalPatterns: ['Attaque rapide', 'Défense solide', 'Jeu de possession', 'Contre-attaques'],
+      keyFactors: ['Forme récente', 'Historique des confrontations', 'Conditions de jeu']
+    };
+  }
+
+  generateHalftimePredictionWithConfrontations(weightedResults, teamStats, confrontationAnalysis, originalData) {
+    if (!originalData.halftimeScoreOdds || originalData.halftimeScoreOdds.length === 0) {
+      return this.generateHalftimePrediction(weightedResults, teamStats, originalData);
+    }
+
+    // Utiliser les 4 scores mi-temps fournis pour améliorer la prédiction
+    const halftimeScores = originalData.halftimeScoreOdds.map(odds => odds.score).filter(score => score && !score.includes('NaN'));
+    
+    if (halftimeScores.length === 0) {
+      return { score: '0-0', confidence: 0.5 };
+    }
+
+    // Sélection basée sur l'analyse des confrontations
+    const confrontationBonus = confrontationAnalysis ? confrontationAnalysis.homeAdvantage : 0.5;
+    const selectedIndex = Math.floor(confrontationBonus * halftimeScores.length);
+    const selectedScore = halftimeScores[Math.min(selectedIndex, halftimeScores.length - 1)];
+
+    return {
+      score: selectedScore || '0-0',
+      confidence: 0.7 + (confrontationAnalysis?.confidence || 0.3) * 0.25,
+      algorithm: 'confrontation_enhanced_halftime'
+    };
   }
 
   async getHeadToHeadStats(homeTeam, awayTeam) {
