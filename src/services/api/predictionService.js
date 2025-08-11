@@ -26,17 +26,19 @@ async create(predictionData) {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Plus de temps pour l'IA avancée
     
     // Analyse avancée avec IA pour scores diversifiés
-    const enhancedPrediction = await this.generateAIPrediction(predictionData);
+const enhancedPrediction = await this.generateAIPrediction(predictionData);
     
     const highestId = this.predictions.reduce((max, p) => Math.max(max, p.Id), 0);
     const newPrediction = {
       Id: highestId + 1,
       ...enhancedPrediction,
       timestamp: predictionData.timestamp || new Date().toISOString(),
-      aiVersion: '3.0.0',
-      analysisComplexity: 'extreme_score_capable',
-      scoreRangeCapability: 'enhanced',
-      diverseScoreSupport: true
+      aiVersion: '3.1.0',
+      analysisComplexity: 'halftime_fulltime_capable',
+      scoreRangeCapability: 'enhanced_with_periods',
+      diverseScoreSupport: true,
+      halftimeSupport: true,
+      winnerPredictionCapability: true
     };
     
     this.predictions.push(newPrediction);
@@ -66,9 +68,13 @@ async generateAIPrediction(matchData) {
     });
     
     return {
-      ...matchData,
+...matchData,
       predictedScore: aiPrediction.mostLikelyScore,
+      predictedHalftimeScore: aiPrediction.mostLikelyHalftimeScore,
+      predictedWinner: aiPrediction.predictedWinner,
+      predictedHalftimeWinner: aiPrediction.predictedHalftimeWinner,
       confidence: aiPrediction.confidence,
+      halftimeConfidence: aiPrediction.halftimeConfidence,
       aiAnalysis: aiPrediction.analysis,
       alternativeScenarios: aiPrediction.alternatives,
       riskLevel: aiPrediction.riskAssessment,
@@ -141,9 +147,13 @@ calculateAdvancedAIPrediction({ teamStats, historicalData, oddsAnalysis, marketT
     const extremeScoreValidation = this.validateExtremeScorePrediction(finalPrediction, scoreRangeAnalysis);
     
     return {
-      mostLikelyScore: finalPrediction.score,
+mostLikelyScore: finalPrediction.score,
+      mostLikelyHalftimeScore: halftimePrediction?.score || this.generateHalftimeFromFullTime(finalPrediction.score),
+      predictedWinner: this.determineWinner(finalPrediction.score),
+      predictedHalftimeWinner: halftimePrediction ? this.determineWinner(halftimePrediction.score) : this.determineWinner(this.generateHalftimeFromFullTime(finalPrediction.score)),
       confidence: this.calculateEnhancedConfidence(finalPrediction, teamStats, crossValidation),
-      analysis: this.generateAdvancedAnalysisReport(teamStats, finalPrediction, algorithms),
+      halftimeConfidence: halftimePrediction ? this.calculateEnhancedConfidence(halftimePrediction, teamStats, crossValidation) : Math.round(this.calculateEnhancedConfidence(finalPrediction, teamStats, crossValidation) * 0.85),
+      analysis: this.generateAdvancedAnalysisReport(teamStats, finalPrediction, algorithms, halftimePrediction),
       alternatives: this.getEnhancedAlternativeScenarios(weightedResults),
       riskAssessment: this.assessAdvancedPredictionRisk(finalPrediction, teamStats),
       algorithmBreakdown: this.generateAlgorithmBreakdown(weightedResults),
@@ -272,19 +282,26 @@ enhancedStatisticalAnalysisAlgorithm(teamStats, historicalData, scoreRangeAnalys
     const awayDefensiveStrength = parseFloat(teamStats.awayTeam.defensiveStrength || 1.0);
     
     // Distribution de Poisson avancée pour les buts avec facteurs multiplicateurs
-    let homeGoals = Math.round(homeAttackingStrength * (1 + teamStats.homeTeam.homeAdvantage) * (1 / awayDefensiveStrength));
+let homeGoals = Math.round(homeAttackingStrength * (1 + teamStats.homeTeam.homeAdvantage) * (1 / awayDefensiveStrength));
     let awayGoals = Math.round(awayAttackingStrength * (1 - teamStats.homeTeam.homeAdvantage * 0.3) * (1 / homeDefensiveStrength));
+    
+    // Génération des scores mi-temps (généralement plus bas)
+    let homeHalftimeGoals = Math.round(homeGoals * (0.4 + Math.random() * 0.3));
+    let awayHalftimeGoals = Math.round(awayGoals * (0.4 + Math.random() * 0.3));
     
     // Ajustement pour matches à fort potentiel offensif
     if (scoreRangeAnalysis && scoreRangeAnalysis.highScoringLikelihood > 0.6) {
       homeGoals = Math.round(homeGoals * (1.2 + Math.random() * 0.3));
       awayGoals = Math.round(awayGoals * (1.2 + Math.random() * 0.3));
+      homeHalftimeGoals = Math.round(homeHalftimeGoals * (1.1 + Math.random() * 0.2));
+      awayHalftimeGoals = Math.round(awayHalftimeGoals * (1.1 + Math.random() * 0.2));
     }
     
     // Limite les scores extrêmement élevés mais permet une plus grande variété
     homeGoals = Math.min(7, Math.max(0, homeGoals));
     awayGoals = Math.min(7, Math.max(0, awayGoals));
-    
+    homeHalftimeGoals = Math.min(4, Math.max(0, homeHalftimeGoals));
+    awayHalftimeGoals = Math.min(4, Math.max(0, awayHalftimeGoals));
     // Ajustement final basé sur les patterns historiques
     const historicalAdjustment = this.calculateHistoricalScoreAdjustment(homeGoals, awayGoals, historicalData);
     
@@ -457,20 +474,27 @@ async updateResult(id, actualScore) {
     }
     
     const prediction = this.predictions[index];
-    const isCorrect = prediction.predictedScore === actualScore;
+const isCorrect = prediction.predictedScore === actualScore;
+    const actualWinner = this.determineWinner(actualScore);
+    const isWinnerCorrect = prediction.predictedWinner === actualWinner;
     
     // Analyse avancée de la performance IA pour scores diversifiés
     const performanceAnalysis = this.analyzeAdvancedAIPerformance(prediction, actualScore);
     const extremeScoreAnalysis = this.analyzeExtremeScorePerformance(prediction, actualScore);
+    const winnerAnalysis = this.analyzeWinnerPredictionAccuracy(prediction, actualWinner);
     
     this.predictions[index] = {
       ...prediction,
       actualResult: {
         actualScore,
+        actualWinner,
         correct: isCorrect,
+        winnerCorrect: isWinnerCorrect,
         confidenceAccuracy: this.assessConfidenceAccuracy(prediction, isCorrect),
+        winnerConfidenceAccuracy: this.assessWinnerConfidenceAccuracy(prediction, isWinnerCorrect),
         aiPerformance: performanceAnalysis,
         extremeScoreAnalysis: extremeScoreAnalysis,
+        winnerAnalysis: winnerAnalysis,
         learningPoints: this.extractEnhancedLearningPoints(prediction, actualScore),
         scoreTypeAccuracy: this.assessScoreTypeAccuracy(prediction, actualScore),
         diverseScoreLearning: this.extractDiverseScoreLearning(prediction, actualScore)
@@ -763,63 +787,85 @@ async checkScoresWith1XBET(predictionId) {
 
     try {
       const scoreResult = await scoresService.verifyPredictionResult(prediction);
-      
-      if (scoreResult.actualScore) {
-        // Match terminé - analyse IA complète pour scores diversifiés
+if (scoreResult.actualScore) {
+        // Match terminé - analyse IA complète pour scores diversifiés avec mi-temps
         const updatedPrediction = await this.updateResult(predictionId, scoreResult.actualScore);
         const comprehensiveAnalysis = this.generateComprehensivePostMatchAnalysis(updatedPrediction, scoreResult);
         const extremeScoreAnalysis = this.analyzeExtremeScoreResult(scoreResult.actualScore);
+        const winnerAnalysis = this.analyzeWinnerAccuracy(updatedPrediction, scoreResult);
+        const halftimeAnalysis = scoreResult.actualHalftimeScore ? this.analyzeHalftimeAccuracy(updatedPrediction, scoreResult) : null;
         
         // Mise à jour des algorithmes avec apprentissage automatique avancé
         await this.performAdvancedLearning(updatedPrediction, scoreResult);
         
         const scoreDeviation = this.calculateScoreDeviation(prediction.predictedScore, scoreResult.actualScore);
         const isExtremeScore = this.isExtremeScore(scoreResult.actualScore);
+        const actualWinner = this.determineWinner(scoreResult.actualScore);
+        const winnerCorrect = prediction.predictedWinner === actualWinner;
         
         return {
           status: 'terminé',
           actualScore: scoreResult.actualScore,
+          actualWinner: actualWinner,
+          actualHalftimeScore: scoreResult.actualHalftimeScore,
+          actualHalftimeWinner: scoreResult.actualHalftimeScore ? this.determineWinner(scoreResult.actualHalftimeScore) : null,
           correct: scoreResult.correct,
+          winnerCorrect: winnerCorrect,
+          halftimeCorrect: halftimeAnalysis?.halftimeScoreCorrect,
+          halftimeWinnerCorrect: halftimeAnalysis?.halftimeWinnerCorrect,
           message: scoreResult.correct ? 
-            `🎯 IA EXACTE ! Score ${scoreResult.actualScore} prédit avec ${prediction.confidence}% confiance ${isExtremeScore ? '(Score extrême détecté!)' : ''}` : 
-            `📊 Analyse: ${scoreResult.actualScore} vs ${prediction.predictedScore} | Écart: ${scoreDeviation} ${isExtremeScore ? '| Score extrême: +10 pts apprentissage' : ''}`,
+            `🎯 IA EXACTE ! Score ${scoreResult.actualScore} prédit avec ${prediction.confidence}% confiance ${winnerCorrect ? '+ Vainqueur correct ✓' : ''} ${isExtremeScore ? '(Score extrême détecté!)' : ''}` : 
+            `📊 Analyse: ${scoreResult.actualScore} vs ${prediction.predictedScore} | Vainqueur: ${actualWinner} vs ${prediction.predictedWinner} | Écart: ${scoreDeviation} ${isExtremeScore ? '| Score extrême: +10 pts apprentissage' : ''}`,
           aiAnalysis: comprehensiveAnalysis,
           extremeScoreAnalysis: extremeScoreAnalysis,
+          winnerAnalysis: winnerAnalysis,
+          halftimeAnalysis: halftimeAnalysis,
           learningImpact: this.calculateAdvancedLearningImpact(updatedPrediction),
           predictionQuality: this.assessDetailedPredictionQuality(prediction, scoreResult),
           algorithmPerformance: this.evaluateAlgorithmPerformance(prediction, scoreResult),
           scoreTypePerformance: this.evaluateScoreTypePerformance(prediction, scoreResult)
         };
       } else if (scoreResult.currentScore) {
-        // Match en cours - suivi temps réel avancé
+        // Match en cours - suivi temps réel avancé avec mi-temps
         const advancedLiveAnalysis = this.performAdvancedLiveAnalysis(prediction, scoreResult);
         const realTimePredictions = this.generateRealTimePredictions(prediction, scoreResult);
         const extremeScoreProjection = this.projectExtremeScoreLikelihood(scoreResult);
+        const liveWinnerProjection = this.projectLiveWinner(scoreResult);
+        const halftimeProjection = this.projectHalftimeOutcome(scoreResult, prediction);
         
         return {
           status: 'en_cours',
           currentScore: scoreResult.currentScore,
+          currentWinner: this.determineWinner(scoreResult.currentScore),
           minute: scoreResult.minute,
-          message: `⚡ LIVE ${scoreResult.currentScore} (${scoreResult.minute}') → Prédiction finale: ${realTimePredictions.adjustedPrediction} ${extremeScoreProjection.likelihood > 0.3 ? '(Score élevé possible)' : ''}`,
+          message: `⚡ LIVE ${scoreResult.currentScore} (${scoreResult.minute}') → Prédiction finale: ${realTimePredictions.adjustedPrediction} | Vainqueur projeté: ${liveWinnerProjection.projectedWinner} ${extremeScoreProjection.likelihood > 0.3 ? '(Score élevé possible)' : ''}`,
           liveAnalysis: advancedLiveAnalysis,
           realTimePredictions: realTimePredictions,
           extremeScoreProjection: extremeScoreProjection,
+          liveWinnerProjection: liveWinnerProjection,
+          halftimeProjection: halftimeProjection,
           predictionTracking: this.trackAdvancedLivePrediction(prediction, scoreResult),
           probabilityUpdates: this.calculateLiveProbabilityUpdates(prediction, scoreResult),
           nextEvents: this.predictNextMatchEvents(scoreResult)
         };
       } else {
-        // Match à venir - préparation IA avancée
+        // Match à venir - préparation IA avancée avec support mi-temps
         const advancedPreMatchAnalysis = this.generateAdvancedPreMatchInsights(prediction);
         const predictionReadiness = this.assessPredictionReadiness(prediction);
         const extremeScorePotential = this.assessExtremeScorePotential(prediction);
+        const halftimeReadiness = prediction.predictedHalftimeScore ? 'Activé' : 'Non configuré';
         
         return {
           status: 'a_venir',
-          message: `🚀 IA OPTIMISÉE v3.0 | Confiance: ${prediction.confidence}% | Algorithmes: ${prediction.algorithmBreakdown?.length || 7} actifs | Scores 0-7 supportés`,
+          message: `🚀 IA OPTIMISÉE v3.1 | Confiance: ${prediction.confidence}% | Mi-temps: ${halftimeReadiness} | Algorithmes: ${prediction.algorithmBreakdown?.length || 7} actifs | Vainqueurs prédits`,
           preMatchInsights: advancedPreMatchAnalysis,
           predictionReadiness: predictionReadiness,
           extremeScorePotential: extremeScorePotential,
+          halftimeSupport: {
+            enabled: !!prediction.predictedHalftimeScore,
+            confidence: prediction.halftimeConfidence,
+            predictedWinner: prediction.predictedHalftimeWinner
+          },
           aiOptimization: this.getAIOptimizationStatus(prediction),
           lastAIUpdate: prediction.timestamp,
           realTimeFactors: prediction.realTimeFactors,
@@ -841,8 +887,137 @@ async checkScoresWith1XBET(predictionId) {
     }
   }
 
-  generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
+generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
     const baseAnalysis = this.generatePostMatchAIAnalysis(prediction, scoreResult);
+    
+    return {
+      ...baseAnalysis,
+      algorithmAccuracy: this.evaluateIndividualAlgorithmAccuracy(prediction, scoreResult),
+      confidenceValidation: this.validateConfidenceAccuracy(prediction, scoreResult),
+      patternMatching: this.analyzePatternMatchingSuccess(prediction, scoreResult),
+      marketPrediction: this.evaluateMarketPredictionAccuracy(prediction, scoreResult),
+      learningOpportunities: this.identifySpecificLearningOpportunities(prediction, scoreResult),
+      futureOptimization: this.generateFutureOptimizationSuggestions(prediction, scoreResult)
+    };
+  }
+
+  // Nouvelles méthodes pour support mi-temps et vainqueurs
+  generateHalftimeFromFullTime(fullTimeScore) {
+    if (!fullTimeScore || typeof fullTimeScore !== 'string') return '0-0';
+    const [homeGoals, awayGoals] = fullTimeScore.split('-').map(s => parseInt(s.trim()));
+    if (isNaN(homeGoals) || isNaN(awayGoals)) return '0-0';
+    
+    // Génère un score mi-temps plausible (généralement plus bas)
+    const homeHT = Math.round(homeGoals * (0.4 + Math.random() * 0.4));
+    const awayHT = Math.round(awayGoals * (0.4 + Math.random() * 0.4));
+    
+    return `${Math.max(0, homeHT)}-${Math.max(0, awayHT)}`;
+  }
+
+  determineWinner(score) {
+    if (!score || typeof score !== 'string') return 'Indéterminé';
+    const [home, away] = score.split('-').map(s => parseInt(s.trim()));
+    if (isNaN(home) || isNaN(away)) return 'Indéterminé';
+    if (home > away) return 'Domicile';
+    if (away > home) return 'Visiteur';
+    return 'Nul';
+  }
+
+  analyzeWinnerPredictionAccuracy(prediction, actualWinner) {
+    const predicted = prediction.predictedWinner;
+    const actual = actualWinner;
+    
+    return {
+      predictedWinner: predicted,
+      actualWinner: actual,
+      correct: predicted === actual,
+      accuracy: predicted === actual ? 100 : 0,
+      difficulty: this.assessWinnerPredictionDifficulty(prediction, actual)
+    };
+  }
+
+  assessWinnerConfidenceAccuracy(prediction, isWinnerCorrect) {
+    const confidence = prediction.confidence || 0;
+    if (isWinnerCorrect) {
+      return confidence >= 70 ? 'Excellent' : confidence >= 50 ? 'Bon' : 'Faible';
+    } else {
+      return confidence >= 70 ? 'Surconfiant' : confidence >= 50 ? 'Modéré' : 'Prudent';
+    }
+  }
+
+  assessWinnerPredictionDifficulty(prediction, actualWinner) {
+    // Évalue la difficulté de prédire le vainqueur
+    if (actualWinner === 'Nul') return 'Très difficile';
+    return 'Modéré';
+  }
+
+  analyzeWinnerAccuracy(prediction, scoreResult) {
+    const actualWinner = this.determineWinner(scoreResult.actualScore);
+    return {
+      predictedWinner: prediction.predictedWinner,
+      actualWinner: actualWinner,
+      correct: prediction.predictedWinner === actualWinner,
+      confidence: prediction.confidence
+    };
+  }
+
+  analyzeHalftimeAccuracy(prediction, scoreResult) {
+    if (!scoreResult.actualHalftimeScore || !prediction.predictedHalftimeScore) {
+      return null;
+    }
+
+    const actualHalftimeWinner = this.determineWinner(scoreResult.actualHalftimeScore);
+    
+    return {
+      predictedHalftimeScore: prediction.predictedHalftimeScore,
+      actualHalftimeScore: scoreResult.actualHalftimeScore,
+      predictedHalftimeWinner: prediction.predictedHalftimeWinner,
+      actualHalftimeWinner: actualHalftimeWinner,
+      halftimeScoreCorrect: prediction.predictedHalftimeScore === scoreResult.actualHalftimeScore,
+      halftimeWinnerCorrect: prediction.predictedHalftimeWinner === actualHalftimeWinner,
+      confidence: prediction.halftimeConfidence
+    };
+  }
+
+  projectLiveWinner(scoreResult) {
+    const currentWinner = this.determineWinner(scoreResult.currentScore);
+    const minute = scoreResult.minute || 0;
+    
+    // Projette le vainqueur final basé sur le score actuel et le temps restant
+    let confidence = 50;
+    if (minute > 80) confidence += 30;
+    else if (minute > 60) confidence += 20;
+    else if (minute > 45) confidence += 10;
+
+    return {
+      projectedWinner: currentWinner,
+      confidence: Math.min(95, confidence),
+      stabilityFactor: minute / 90
+    };
+  }
+
+  projectHalftimeOutcome(scoreResult, prediction) {
+    const minute = scoreResult.minute || 0;
+    
+    if (minute < 45) {
+      return {
+        status: 'en_cours',
+        currentHalftimeProjection: scoreResult.currentScore,
+        matches: prediction.predictedHalftimeScore === scoreResult.currentScore
+      };
+    } else if (minute === 45) {
+      return {
+        status: 'terminé',
+        actualHalftimeScore: scoreResult.currentScore,
+        correct: prediction.predictedHalftimeScore === scoreResult.currentScore
+      };
+    } else {
+      return {
+        status: 'terminé',
+        note: 'Mi-temps déjà écoulée'
+      };
+    }
+  }
     
     return {
       ...baseAnalysis,

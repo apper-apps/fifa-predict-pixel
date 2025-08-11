@@ -8,12 +8,15 @@ import ApperIcon from "@/components/ApperIcon";
 import { toast } from "react-toastify";
 
 const MatchForm = ({ onSubmit, isLoading }) => {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     homeTeam: "",
     awayTeam: "",
     matchDate: "",
     matchTime: "",
-    scoreOdds: Array(5).fill({ score: "", coefficient: "" })
+    scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
+    halftimeScoreOdds: Array(3).fill({ score: "", coefficient: "" }),
+    expectedFullTimeScore: "",
+    expectedHalftimeScore: ""
   });
 
   const [errors, setErrors] = useState({});
@@ -51,7 +54,7 @@ const MatchForm = ({ onSubmit, isLoading }) => {
     }
   };
 
-  const validateForm = () => {
+const validateForm = () => {
     const newErrors = {};
 
     if (!formData.homeTeam.trim()) {
@@ -72,7 +75,15 @@ const MatchForm = ({ onSubmit, isLoading }) => {
     );
 
     if (validScoreOdds.length < 3) {
-      newErrors.scoreOdds = "Minimum 3 scores avec coefficients sont requis";
+      newErrors.scoreOdds = "Minimum 3 scores temps complet avec coefficients requis";
+    }
+
+    const validHalftimeScoreOdds = formData.halftimeScoreOdds.filter(
+      item => item.score && item.coefficient && !isNaN(item.coefficient)
+    );
+
+    if (validHalftimeScoreOdds.length < 2) {
+      newErrors.halftimeScoreOdds = "Minimum 2 scores mi-temps avec coefficients requis";
     }
 
     setErrors(newErrors);
@@ -95,7 +106,7 @@ const handleSubmit = async (e) => {
     const aiPreAnalysis = await performPreAnalysis(formData.homeTeam, formData.awayTeam);
     
     const matchData = {
-      homeTeam: formData.homeTeam.trim(),
+homeTeam: formData.homeTeam.trim(),
       awayTeam: formData.awayTeam.trim(),
       dateTime: `${formData.matchDate} ${formData.matchTime}`,
       scoreOdds: validScoreOdds.map(item => ({
@@ -103,6 +114,13 @@ const handleSubmit = async (e) => {
         coefficient: parseFloat(item.coefficient),
         probability: ((1 / parseFloat(item.coefficient)) * 100).toFixed(1)
       })),
+      halftimeScoreOdds: validHalftimeScoreOdds.map(item => ({
+        score: item.score.trim(),
+        coefficient: parseFloat(item.coefficient),
+        probability: ((1 / parseFloat(item.coefficient)) * 100).toFixed(1)
+      })),
+      expectedFullTimeScore: formData.expectedFullTimeScore.trim(),
+      expectedHalftimeScore: formData.expectedHalftimeScore.trim(),
       aiPreAnalysis: aiPreAnalysis
     };
 
@@ -178,11 +196,14 @@ const handleSubmit = async (e) => {
 
   const clearForm = () => {
     setFormData({
-      homeTeam: "",
+homeTeam: "",
       awayTeam: "",
       matchDate: "",
       matchTime: "",
-      scoreOdds: Array(5).fill({ score: "", coefficient: "" })
+      scoreOdds: Array(5).fill({ score: "", coefficient: "" }),
+      halftimeScoreOdds: Array(3).fill({ score: "", coefficient: "" }),
+      expectedFullTimeScore: "",
+      expectedHalftimeScore: ""
     });
     setErrors({});
     toast.success("Formulaire réinitialisé");
@@ -256,7 +277,66 @@ const handleSubmit = async (e) => {
             required
           />
         </div>
+{/* Section scores mi-temps */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <ApperIcon name="Clock" size={20} className="text-accent" />
+              <h3 className="text-lg font-semibold text-white">Scores Mi-temps</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <FormField
+                label="Score attendu mi-temps"
+                error={errors.expectedHalftimeScore}
+              >
+                <Input
+                  type="text"
+                  placeholder="Ex: 1-0"
+                  value={formData.expectedHalftimeScore}
+                  onChange={(e) => handleInputChange('expectedHalftimeScore', e.target.value)}
+                />
+              </FormField>
+              
+              <FormField
+                label="Score attendu temps complet"
+                error={errors.expectedFullTimeScore}
+              >
+                <Input
+                  type="text"
+                  placeholder="Ex: 2-1"
+                  value={formData.expectedFullTimeScore}
+                  onChange={(e) => handleInputChange('expectedFullTimeScore', e.target.value)}
+                />
+              </FormField>
+            </div>
 
+            <ScoreOddsInput
+              title="Cotes Scores Mi-temps"
+              scoreOdds={formData.halftimeScoreOdds}
+              onChange={(index, data) => {
+                const newHalftimeScoreOdds = [...formData.halftimeScoreOdds];
+                newHalftimeScoreOdds[index] = data;
+                setFormData({ ...formData, halftimeScoreOdds: newHalftimeScoreOdds });
+              }}
+              onAdd={() => {
+                if (formData.halftimeScoreOdds.length < 5) {
+                  setFormData({
+                    ...formData,
+                    halftimeScoreOdds: [...formData.halftimeScoreOdds, { score: "", coefficient: "" }]
+                  });
+                }
+              }}
+              onRemove={(index) => {
+                if (formData.halftimeScoreOdds.length > 2) {
+                  const newHalftimeScoreOdds = formData.halftimeScoreOdds.filter((_, i) => i !== index);
+                  setFormData({ ...formData, halftimeScoreOdds: newHalftimeScoreOdds });
+                }
+              }}
+              error={errors.halftimeScoreOdds}
+              maxItems={5}
+              minItems={2}
+            />
+          </div>
         <div className="border-t border-primary/20 pt-6">
           <div className="flex items-center justify-between mb-4">
             <div>

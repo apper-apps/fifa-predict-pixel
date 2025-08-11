@@ -75,9 +75,30 @@ const PredictionCard = ({ prediction, isLoading }) => {
           <div className="text-4xl font-display font-bold gradient-text mb-2 animate-glow">
             {prediction.predictedScore}
           </div>
-          <p className="text-sm text-gray-400">Score exact prédit (1ère mi-temps)</p>
+<p className="text-sm text-gray-400">Score exact prédit</p>
         </div>
+        
+        {prediction.predictedHalftimeScore && (
+          <div className="text-center">
+            <div className="text-3xl font-bold text-accent mb-2">
+              {prediction.predictedHalftimeScore}
+            </div>
+            <p className="text-sm text-gray-400">Score mi-temps prédit</p>
+            <div className="mt-2">
+              <span className="text-xs px-2 py-1 bg-accent/20 text-accent rounded-full">
+                Vainqueur mi-temps: {prediction.predictedHalftimeWinner || 'Indéterminé'}
+              </span>
+            </div>
+          </div>
+        )}
 
+        <div className="text-center">
+          <div className="text-sm text-gray-300 mb-2">
+            <span className="px-3 py-1 bg-primary/20 text-primary rounded-full">
+              Vainqueur: {prediction.predictedWinner || 'Indéterminé'}
+            </span>
+          </div>
+        </div>
         <div className="flex items-center justify-between">
           <div className="text-center">
             <div className={`text-2xl font-bold ${getConfidenceColor()}`}>

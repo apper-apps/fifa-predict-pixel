@@ -207,8 +207,13 @@ const checkScore = async (predictionId) => {
                 <ApperIcon name="Shield" size={16} className="text-primary" />
                 <div>
                   <div className="font-medium text-white">
-                    {prediction.homeTeam} vs {prediction.awayTeam}
+{prediction.homeTeam} vs {prediction.awayTeam}
                   </div>
+                  {prediction.predictedWinner && (
+                    <div className="text-xs text-primary mt-1">
+                      Vainqueur: {prediction.predictedWinner}
+                    </div>
+                  )}
                   <div className="text-xs text-gray-400">
                     {format(new Date(prediction.matchDateTime), "dd MMMM yyyy 'à' HH:mm", { locale: fr })}
                   </div>
@@ -221,7 +226,13 @@ const checkScore = async (predictionId) => {
               <div className="text-center">
                 <div className="text-lg font-bold gradient-text">
                   {prediction.predictedScore}
-                </div>
+</div>
+                {prediction.predictedHalftimeScore && (
+                  <div className="text-xs text-accent">
+                    Mi-temps: {prediction.predictedHalftimeScore}
+                    {prediction.predictedHalftimeWinner && ` (${prediction.predictedHalftimeWinner})`}
+                  </div>
+                )}
                 <div className="text-xs text-gray-500">Prédiction IA</div>
               </div>
               
@@ -244,16 +255,40 @@ const checkScore = async (predictionId) => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+<div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="text-sm">
                   <span className="text-gray-400">Prédit:</span>{" "}
                   <span className="text-primary font-medium">{prediction.predictedScore}</span>
+                  {prediction.predictedWinner && (
+                    <span className="text-xs text-primary ml-2">({prediction.predictedWinner})</span>
+                  )}
                 </div>
+                {prediction.predictedHalftimeScore && (
+                  <div className="text-sm">
+                    <span className="text-gray-400">Mi-temps:</span>{" "}
+                    <span className="text-accent font-medium">{prediction.predictedHalftimeScore}</span>
+                    {prediction.predictedHalftimeWinner && (
+                      <span className="text-xs text-accent ml-2">({prediction.predictedHalftimeWinner})</span>
+                    )}
+                  </div>
+                )}
                 {prediction.actualResult && (
                   <div className="text-sm">
                     <span className="text-gray-400">Réel:</span>{" "}
                     <span className="text-white font-medium">{prediction.actualResult.actualScore}</span>
+                    {prediction.actualResult.actualWinner && (
+                      <span className="text-xs text-white ml-2">({prediction.actualResult.actualWinner})</span>
+                    )}
+                  </div>
+                )}
+                {prediction.actualResult && prediction.actualResult.actualHalftimeScore && (
+                  <div className="text-sm">
+                    <span className="text-gray-400">Mi-temps réel:</span>{" "}
+                    <span className="text-white font-medium">{prediction.actualResult.actualHalftimeScore}</span>
+                    {prediction.actualResult.actualHalftimeWinner && (
+                      <span className="text-xs text-white ml-2">({prediction.actualResult.actualHalftimeWinner})</span>
+                    )}
                   </div>
                 )}
               </div>
