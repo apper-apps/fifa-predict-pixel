@@ -1018,21 +1018,7 @@ generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
       };
     }
   }
-}
-
-  generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
-    const baseAnalysis = this.generatePostMatchAIAnalysis(prediction, scoreResult);
-    
-    return {
-      ...baseAnalysis,
-      algorithmAccuracy: this.evaluateIndividualAlgorithmAccuracy(prediction, scoreResult),
-      confidenceValidation: this.validateConfidenceAccuracy(prediction, scoreResult),
-      patternMatching: this.analyzePatternMatchingSuccess(prediction, scoreResult),
-      marketPrediction: this.evaluateMarketPredictionAccuracy(prediction, scoreResult),
-      learningOpportunities: this.identifySpecificLearningOpportunities(prediction, scoreResult),
-      futureOptimization: this.generateFutureOptimizationSuggestions(prediction, scoreResult)
-    };
-  }
+performAdvancedLiveAnalysis(prediction, scoreResult) {
     const currentMinute = scoreResult.minute || 0;
     const currentScore = scoreResult.currentScore.split('-').map(Number);
     const predictedScore = prediction.predictedScore.split('-').map(Number);
@@ -1070,7 +1056,7 @@ generateComprehensivePostMatchAnalysis(prediction, scoreResult) {
     };
   }
 
-analyzeLiveMatch(prediction, scoreResult) {
+  analyzeLiveMatch(prediction, scoreResult) {
     const currentScoreParts = scoreResult.currentScore.split('-').map(Number);
     const predictedScoreParts = prediction.predictedScore.split('-').map(Number);
     const currentMinute = scoreResult.minute || 0;
@@ -1085,6 +1071,7 @@ analyzeLiveMatch(prediction, scoreResult) {
       criticalEventsPrediction: this.predictCriticalEvents(scoreResult, prediction)
     };
   }
+}
 
   trackAdvancedScoreProgression(currentScore, predictedScore, minute) {
     const expectedProgression = this.calculateExpectedProgression(predictedScore, minute);
