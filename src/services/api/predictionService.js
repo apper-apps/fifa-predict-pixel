@@ -1689,9 +1689,11 @@ interpretAdvancedNeuralOutput(outputLayer) {
     };
   }
 
-  calculateAlgorithmReliability(index, data) {
+calculateAlgorithmReliability(index, data) {
     return Math.random() * 0.3 + 0.7;
-generateHalftimePrediction(weightedResults, teamStats, originalData) {
+  }
+
+  generateHalftimePrediction(weightedResults, teamStats, originalData) {
     // Generate halftime prediction using reduced scoring expectations
     const fullTimeResults = weightedResults.map(result => {
       const [homeGoals, awayGoals] = result.score.split('-').map(Number);
@@ -1731,9 +1733,7 @@ generateHalftimePrediction(weightedResults, teamStats, originalData) {
     return `AI Analysis: ${algorithms.length} algorithms analyzed. Final prediction confidence: ${prediction.confidence || 75}%${halftimeInfo}`;
   }
 
-  getEnhancedAlternativeScenarios(weightedResults) {
-
-  getEnhancedAlternativeScenarios(weightedResults) {
+getEnhancedAlternativeScenarios(weightedResults) {
     return weightedResults.slice(0, 3).map(result => ({
       score: result.score,
       probability: result.weight * 100
