@@ -1067,17 +1067,15 @@ performAdvancedLiveAnalysis(prediction, scoreResult) {
       nextGoalPrediction: this.predictAdvancedNextGoal(scoreResult, prediction),
       finalScoreForecast: this.forecastAdvancedFinalScore(prediction, scoreResult),
       matchPhaseAnalysis: this.analyzeMatchPhase(currentMinute, currentScoreParts),
-      momentumIndicators: this.calculateMomentumIndicators(scoreResult),
+momentumIndicators: this.calculateMomentumIndicators(scoreResult),
       criticalEventsPrediction: this.predictCriticalEvents(scoreResult, prediction)
     };
   }
-}
 
   trackAdvancedScoreProgression(currentScore, predictedScore, minute) {
     const expectedProgression = this.calculateExpectedProgression(predictedScore, minute);
     const actualProgression = currentScore;
     const progressionDelta = actualProgression.map((actual, i) => actual - expectedProgression[i]);
-    
     return {
       expected: expectedProgression,
       actual: actualProgression,
@@ -2201,6 +2199,7 @@ generateAdvancedFallbackPrediction(prediction) {
     const timeBonus = minute > 75 ? 0.1 : 0;
     return Math.min(0.8, baseProb + timeBonus);
   }
+}
 }
 
 export const predictionService = new PredictionService();
