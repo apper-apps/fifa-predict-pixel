@@ -108,39 +108,55 @@ async verifyPredictionResult(prediction) {
         const extremeScoreAnalysis = this.analyzeExtremeScoreResult(prediction, score.finalScore);
         const halftimeScoreAnalysis = score.halftimeScore ? this.analyzeHalftimeScoreAccuracy(prediction, score) : null;
         
+// Analyse complète des 4 scores mi-temps exacts
+        const exactHalftimeAnalysis = this.analyzeExactHalftimeScores(prediction, score);
+        const halftimeScoreAccuracy = score.halftimeScore ? this.calculateHalftimeAccuracy(prediction.predictedHalftimeScore, score.halftimeScore) : null;
+        
         return {
           actualScore: score.finalScore,
           actualHalftimeScore: score.halftimeScore,
+          actualWinner: this.determineWinner(score.finalScore),
+          actualHalftimeWinner: score.halftimeScore ? this.determineWinner(score.halftimeScore) : null,
           correct: prediction.predictedScore === score.finalScore,
-          halftimeCorrect: halftimeScoreAnalysis?.exactMatch || false,
+          halftimeCorrect: exactHalftimeAnalysis?.exactMatch || false,
+          halftimeAccuracy: halftimeScoreAccuracy,
+          exactHalftimeMatch: exactHalftimeAnalysis?.exactMatch,
           matchStatus: 'terminé',
           timestamp: new Date().toISOString(),
+          matchTime: this.getExactMatchTime(prediction),
           confidence: prediction.confidence || 50,
           aiValidation: comprehensiveAIValidation,
           accuracyAnalysis: accuracyAnalysis,
           extremeScoreAnalysis: extremeScoreAnalysis,
-          halftimeScoreAnalysis: halftimeScoreAnalysis,
+          halftimeScoreAnalysis: exactHalftimeAnalysis,
           predictionAccuracy: this.calculateAdvancedPredictionAccuracy(prediction, score.finalScore),
           learningData: this.extractComprehensiveLearningData(prediction, score),
           performanceMetrics: this.calculatePerformanceMetrics(prediction, score),
           qualityAssessment: this.assessAdvancedPredictionQuality(prediction, score),
           improvementInsights: this.generateImprovementInsights(prediction, score),
           scoreTypeAccuracy: this.assessScoreTypeAccuracy(prediction, score.finalScore),
-          diverseScoreLearning: this.extractDiverseScoreLearning(prediction, score.finalScore)
+          diverseScoreLearning: this.extractDiverseScoreLearning(prediction, score.finalScore),
+          fourScoreExactIntegration: exactHalftimeAnalysis?.fourScoreAnalysis || 'N/A'
         };
       } else if (score.status === 'live' && score.currentScore) {
-        // Match en cours - analyse temps réel sophistiquée avec informations mi-temps
+        // Match en cours - temps réel avec suivi mi-temps et 4 scores exacts
+        const currentMatchTime = new Date().toISOString();
+        const currentMinute = score.minute || this.estimateCurrentMinute(prediction);
         const advancedRealTimeAnalysis = this.performAdvancedRealTimeAnalysis(prediction, score);
         const dynamicPredictionUpdates = this.calculateDynamicPredictionUpdates(prediction, score);
         const extremeScoreProjection = this.calculateExtremeScoreProjection(prediction, score);
         const halftimeTrackingAnalysis = this.analyzeHalftimeProgression(prediction, score);
+        const realTimeHalftimePredictions = this.generateRealTimeHalftimePredictions(prediction, score);
         
         return {
           currentScore: score.currentScore,
-          actualHalftimeScore: score.halftimeScore || null,
-          matchStatus: 'en cours',
-          minute: score.minute || 'N/A',
-          timestamp: new Date().toISOString(),
+          currentWinner: this.determineWinner(score.currentScore),
+          actualHalftimeScore: currentMinute >= 45 ? score.currentScore : null,
+          matchStatus: 'en_cours',
+          minute: currentMinute,
+          currentTime: currentMatchTime,
+          scheduledTime: this.getExactMatchTime(prediction),
+          timestamp: currentMatchTime,
           predictionTracking: advancedRealTimeAnalysis,
           dynamicUpdates: dynamicPredictionUpdates,
           extremeScoreProjection: extremeScoreProjection,
@@ -152,46 +168,62 @@ async verifyPredictionResult(prediction) {
           criticalMoments: this.identifyCriticalMoments(score),
           predictionViability: this.assessLivePredictionViability(prediction, score),
           highScoringPotential: this.assessHighScoringPotential(score, prediction),
-          realTimePredictions: this.generateRealTimeHalftimePredictions(prediction, score)
+          realTimePredictions: realTimeHalftimePredictions,
+          liveHalftimeAnalysis: currentMinute >= 45 ? this.analyzeCurrentHalftime(prediction, score) : null,
+          fourScoreLiveTracking: this.trackFourScoreExactLive(prediction, score)
         };
       } else {
-        // Match à venir - préparation IA avancée avec informations temporelles précises
+        // Match à venir - préparation avec heures exactes et 4 scores mi-temps
+        const scheduledDateTime = this.getExactMatchTime(prediction);
+        const timeUntilKickoff = this.calculateTimeUntilKickoff(scheduledDateTime);
         const advancedPreMatchValidation = this.performAdvancedPreMatchValidation(prediction);
         const optimizationStatus = this.assessPreMatchOptimization(prediction);
         const extremeScorePotential = this.assessExtremeScorePotential(prediction);
-        const scheduledDateTime = this.getExactMatchTime(prediction);
+        const fourScoreReadiness = this.assessFourScoreHalftimeReadiness(prediction);
         
         return {
           matchStatus: 'à venir',
           scheduledTime: scheduledDateTime,
-          timeUntilKickoff: this.calculateTimeUntilKickoff(scheduledDateTime),
+          timeUntilKickoff: timeUntilKickoff,
+          countdownDisplay: this.formatCountdown(timeUntilKickoff),
           timestamp: new Date().toISOString(),
           predictionReadiness: advancedPreMatchValidation,
           optimizationStatus: optimizationStatus,
           extremeScorePotential: extremeScorePotential,
           aiConfidence: prediction.confidence || 50,
+          halftimeConfidence: prediction.halftimeConfidence || 0,
           enhancedFactors: this.getEnhancedKeyFactors(prediction),
           realTimeFactors: prediction.realTimeFactors || {},
           algorithmStatus: this.getAlgorithmReadinessStatus(prediction),
           confidenceFactors: this.analyzeConfidenceFactors(prediction),
-          scoreRangeCapability: prediction.scoreRangeCapability || 'standard'
+          scoreRangeCapability: prediction.scoreRangeCapability || 'enhanced_with_4_halftime_scores',
+          fourScoreHalftimeStatus: fourScoreReadiness,
+          halftimeSupport: {
+            enabled: !!prediction.predictedHalftimeScore,
+            exactScores: 4,
+            confidence: prediction.halftimeConfidence,
+            algorithm: 'genetic_enhanced'
+          }
         };
       }
     } catch (error) {
-      // Gestion d'erreur intelligente avec récupération et informations temporelles
+      // Gestion d'erreur avec informations temporelles précises
+      const currentTime = new Date().toISOString();
       const errorContext = this.analyzeError(error, prediction);
       const recoveryStrategy = this.generateRecoveryStrategy(error, prediction);
       
       return {
         error: error.message,
         matchStatus: 'erreur',
-        timestamp: new Date().toISOString(),
+        timestamp: currentTime,
+        scheduledTime: prediction ? this.getExactMatchTime(prediction) : null,
         errorContext: errorContext,
         recoveryStrategy: recoveryStrategy,
         fallbackData: this.generateIntelligentFallbackData(prediction),
         aiStatus: 'degraded',
         retryRecommended: true,
-        alternativeApproaches: this.suggestAlternativeApproaches(error, prediction)
+        alternativeApproaches: this.suggestAlternativeApproaches(error, prediction),
+        errorTime: currentTime
       };
     }
   }

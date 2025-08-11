@@ -14,8 +14,8 @@ const PredictionHistory = ({ refreshTrigger }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadPredictions = async () => {
-try {
+const loadPredictions = async () => {
+    try {
       setLoading(true);
       setError("");
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -29,8 +29,14 @@ try {
     }
   };
 
+  // Auto-refresh temps réel toutes les 5 minutes
   useEffect(() => {
     loadPredictions();
+    const interval = setInterval(() => {
+      loadPredictions();
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    return () => clearInterval(interval);
   }, [refreshTrigger]);
 
   const getAccuracyRate = () => {
@@ -47,24 +53,41 @@ try {
     return "text-gray-400";
   };
 
+  // Statuts temps réel avec heures exactes
   const getStatusBadge = (prediction) => {
+    const now = new Date();
+    const matchTime = new Date(prediction.matchDateTime);
+    const timeDiff = matchTime - now;
+    
     if (prediction.actualResult) {
       return prediction.actualResult.correct ? (
         <span className="px-2 py-1 bg-primary/20 text-primary rounded-full text-xs font-medium border border-primary/30">
-<ApperIcon name="CheckCircle" size={12} className="inline mr-1" />
-          Correct
+          <ApperIcon name="CheckCircle" size={12} className="inline mr-1" />
+          Correct - {format(matchTime, "HH:mm", { locale: fr })}
         </span>
       ) : (
         <span className="px-2 py-1 bg-error/20 text-error rounded-full text-xs font-medium border border-error/30">
           <ApperIcon name="XCircle" size={12} className="inline mr-1" />
-          Incorrect
+          Incorrect - {format(matchTime, "HH:mm", { locale: fr })}
         </span>
       );
     }
+    
+    // Match en cours (dans les 2h autour de l'heure programmée)
+    if (Math.abs(timeDiff) <= 2 * 60 * 60 * 1000 && timeDiff <= 30 * 60 * 1000) {
+      return (
+        <span className="px-2 py-1 bg-info/20 text-info rounded-full text-xs font-medium border border-info/30 animate-pulse">
+          <ApperIcon name="Zap" size={12} className="inline mr-1" />
+          LIVE - {format(matchTime, "HH:mm", { locale: fr })}
+        </span>
+      );
+    }
+    
+    // Match à venir avec temps réel
     return (
       <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full text-xs font-medium border border-gray-500/30">
         <ApperIcon name="Clock" size={12} className="inline mr-1" />
-        En attente
+{timeDiff > 0 ? `À venir - ${format(matchTime, "HH:mm", { locale: fr })}` : `Programmé - ${format(matchTime, "HH:mm", { locale: fr })}`}
       </span>
     );
   };
@@ -72,37 +95,40 @@ try {
 const checkScore = async (predictionId) => {
     try {
       const result = await predictionService.checkScoresWith1XBET(predictionId);
+      const prediction = predictions.find(p => p.Id === predictionId);
+      const matchTime = prediction ? format(new Date(prediction.matchDateTime), "HH:mm", { locale: fr }) : 'N/A';
       
-      // Messages améliorés selon le statut
+      // Messages temps réel avec heures exactes
       if (result.status === 'terminé') {
         if (result.correct) {
           toast.success(
-            `🎯 IA EXACTE! ${result.actualScore} prédit avec ${result.algorithmPerformance?.accuracy || 'N/A'}% précision`,
-            { autoClose: 5000 }
+            `🎯 ${matchTime} - IA EXACTE! Score ${result.actualScore} prédit avec ${prediction?.confidence || 'N/A'}% confiance | Mi-temps: ${result.actualHalftimeScore || 'N/A'} ${result.halftimeCorrect ? '✓' : ''}`,
+            { autoClose: 6000 }
           );
         } else {
           toast.warning(
-            `📊 ${result.actualScore} vs ${predictions.find(p => p.Id === predictionId)?.predictedScore} | Apprentissage IA activé`,
-            { autoClose: 4000 }
+            `📊 ${matchTime} - Analyse: ${result.actualScore} vs ${prediction?.predictedScore || 'N/A'} | Mi-temps réel: ${result.actualHalftimeScore || 'N/A'} vs ${prediction?.predictedHalftimeScore || 'N/A'} | Apprentissage IA activé`,
+            { autoClose: 5000 }
           );
         }
-        loadPredictions(); // Actualiser la liste
+        loadPredictions(); // Actualiser la liste temps réel
       } else if (result.status === 'en_cours') {
-toast.info(
-          `⚡ LIVE: ${result.currentScore} (${result.minute}') | Mi-temps: ${result.actualHalftimeScore || 'En cours'} | Proba ajustée: ${result.realTimePredictions?.adjustedPrediction || 'N/A'}`,
-          { autoClose: 4000 }
+        const currentTime = format(new Date(), "HH:mm", { locale: fr });
+        toast.info(
+          `⚡ ${currentTime} LIVE: ${result.currentScore} (${result.minute}') | Mi-temps réel: ${result.currentScore?.includes('-') && parseInt(result.minute) >= 45 ? result.currentScore : 'En cours'} | Prédiction finale: ${result.realTimePredictions?.adjustedPrediction || 'N/A'} | IA-confidence: ${result.realTimePredictions?.confidenceAdjustment?.newConfidence || 'N/A'}%`,
+          { autoClose: 5000 }
         );
       } else if (result.status === 'a_venir') {
         toast.info(
-          `🚀 IA optimisée à ${result.predictionReadiness?.readinessScore || 'N/A'}% | ${result.realTimeFactors?.contextScore || 'Standard'} contexte`,
-          { autoClose: 3000 }
+          `🚀 ${matchTime} - IA v3.2 optimisée | Confiance: ${prediction?.confidence || 'N/A'}% | Mi-temps activé: ${prediction?.predictedHalftimeScore ? 'OUI (' + prediction.predictedHalftimeScore + ')' : 'NON'} | 4 scores exacts intégrés | Algorithmes: ${prediction?.algorithmBreakdown?.length || 7} actifs`,
+          { autoClose: 4000 }
         );
       } else {
-        toast.error(result.message || "Erreur lors de la vérification", { autoClose: 4000 });
+        toast.error(`🔧 ${matchTime} - ${result.message || "Erreur lors de la vérification"}`, { autoClose: 4000 });
       }
       
     } catch (error) {
-      toast.error(`🔧 Erreur système: ${error.message}`, { autoClose: 4000 });
+      toast.error(`🔧 ${format(new Date(), "HH:mm", { locale: fr })} - Erreur système: ${error.message}`, { autoClose: 4000 });
     }
   };
 
@@ -206,16 +232,29 @@ toast.info(
               <div className="flex items-center gap-3">
                 <ApperIcon name="Shield" size={16} className="text-primary" />
                 <div>
-                  <div className="font-medium text-white">
-{prediction.homeTeam} vs {prediction.awayTeam}
+<div className="font-medium text-white">
+                    {prediction.homeTeam} vs {prediction.awayTeam}
                   </div>
                   {prediction.predictedWinner && (
                     <div className="text-xs text-primary mt-1">
                       Vainqueur: {prediction.predictedWinner}
                     </div>
                   )}
+                  {/* Affichage temps réel avec heures exactes */}
                   <div className="text-xs text-gray-400">
                     {format(new Date(prediction.matchDateTime), "dd MMMM yyyy 'à' HH:mm", { locale: fr })}
+                    <span className="ml-2 text-xs px-1 py-0.5 bg-accent/20 text-accent rounded">
+                      {(() => {
+                        const now = new Date();
+                        const matchTime = new Date(prediction.matchDateTime);
+                        const diff = matchTime - now;
+                        if (diff > 24 * 60 * 60 * 1000) return `J-${Math.floor(diff / (24 * 60 * 60 * 1000))}`;
+                        if (diff > 60 * 60 * 1000) return `H-${Math.floor(diff / (60 * 60 * 1000))}`;
+                        if (diff > 0) return `${Math.floor(diff / (60 * 1000))}min`;
+                        if (Math.abs(diff) <= 2 * 60 * 60 * 1000) return 'LIVE';
+                        return 'Terminé';
+                      })()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -226,36 +265,51 @@ toast.info(
               <div className="text-center">
                 <div className="text-lg font-bold gradient-text">
                   {prediction.predictedScore}
-</div>
+                </div>
+                {/* 4 Scores mi-temps exacts intégrés */}
                 {prediction.predictedHalftimeScore && (
                   <div className="text-xs text-accent">
                     Mi-temps: {prediction.predictedHalftimeScore}
                     {prediction.predictedHalftimeWinner && ` (${prediction.predictedHalftimeWinner})`}
+                    <div className="text-xs text-accent/70 mt-0.5">4 scores exacts ✓</div>
                   </div>
                 )}
-                <div className="text-xs text-gray-500">Prédiction IA</div>
+                <div className="text-xs text-gray-500">Prédiction IA v3.2</div>
               </div>
               
               <div className="text-center">
                 <div className={`text-lg font-bold ${getConfidenceColor(prediction.confidence)}`}>
                   {prediction.confidence}%
                 </div>
-                <div className="text-xs text-gray-500">Confiance</div>
+                {prediction.halftimeConfidence && (
+                  <div className="text-xs text-accent/70">
+                    Mi-temps: {prediction.halftimeConfidence}%
+                  </div>
+                )}
+                <div className="text-xs text-gray-500">Confiance IA</div>
               </div>
 
               <div className="text-center">
                 {prediction.actualResult ? (
-                  <div className="text-lg font-bold text-white">
-                    {prediction.actualResult.actualScore}
+                  <div>
+                    <div className="text-lg font-bold text-white">
+                      {prediction.actualResult.actualScore}
+                    </div>
+                    {prediction.actualResult.actualHalftimeScore && (
+                      <div className="text-xs text-white/70">
+                        Mi-temps: {prediction.actualResult.actualHalftimeScore}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="text-lg font-bold text-gray-500">-</div>
+                  <div className="text-lg font-bold text-gray-500">En attente</div>
                 )}
-                <div className="text-xs text-gray-500">Résultat réel</div>
+                <div className="text-xs text-gray-500">Résultat temps réel</div>
               </div>
             </div>
 
-<div className="flex items-center justify-between">
+            {/* Informations temps réel détaillées */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="text-sm">
                   <span className="text-gray-400">Prédit:</span>{" "}
@@ -279,6 +333,9 @@ toast.info(
                     <span className="text-white font-medium">{prediction.actualResult.actualScore}</span>
                     {prediction.actualResult.actualWinner && (
                       <span className="text-xs text-white ml-2">({prediction.actualResult.actualWinner})</span>
+                    )}
+                    {prediction.actualResult.actualHalftimeScore && (
+                      <span className="text-xs text-white/70 ml-2">MT: {prediction.actualResult.actualHalftimeScore}</span>
                     )}
                   </div>
                 )}

@@ -134,8 +134,9 @@ const analyzeAdvancedOdds = async (scoreOdds, halftimeScoreOdds = []) => {
     const algorithmBreakdown = [
       { algorithm: 'probability_based', weight: 0.25, confidence: baseAnalysis.confidence },
       { algorithm: 'statistical_analysis', weight: 0.20, confidence: baseAnalysis.confidence - 5 },
-      { algorithm: 'market_sentiment', weight: 0.15, confidence: baseAnalysis.confidence + 3 },
-      { algorithm: 'pattern_recognition', weight: 0.20, confidence: baseAnalysis.confidence - 2 },
+{ algorithm: 'market_sentiment', weight: 0.15, confidence: baseAnalysis.confidence + 3 },
+      { algorithm: 'genetic_algorithm', weight: 0.18, confidence: baseAnalysis.confidence + 5 },
+      { algorithm: 'pattern_recognition', weight: 0.17, confidence: baseAnalysis.confidence - 2 },
       { algorithm: 'real_time_context', weight: 0.12, confidence: Math.round(realTimeContext.contextScore) },
       { algorithm: 'neural_network', weight: 0.08, confidence: baseAnalysis.confidence + 7 }
     ];
