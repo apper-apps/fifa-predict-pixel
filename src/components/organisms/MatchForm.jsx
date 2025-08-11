@@ -141,8 +141,12 @@ const validScoreOdds = formData.scoreOdds.filter(
     const aiPreAnalysis = await performPreAnalysis(formData.homeTeam, formData.awayTeam);
     
     // Filtrer les confrontations valides
-    const validConfrontations = formData.confrontations.filter(conf => 
+const validConfrontations = formData.confrontations.filter(conf => 
       conf.description.trim() && conf.analysis.trim()
+    );
+
+    const validConfrontationHalftime = (formData.confrontationHalftime || []).filter(
+      item => item.score && item.coefficient && !isNaN(item.coefficient)
     );
     
     const matchData = {
