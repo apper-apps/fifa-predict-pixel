@@ -144,7 +144,10 @@ calculateAdvancedAIPrediction({ teamStats, historicalData, oddsAnalysis, marketT
     // Fusion avancée des résultats avec validation croisée
     const finalPrediction = this.advancedResultsCombination(weightedResults);
     const crossValidation = this.performCrossValidation(weightedResults);
-    const extremeScoreValidation = this.validateExtremeScorePrediction(finalPrediction, scoreRangeAnalysis);
+const extremeScoreValidation = this.validateExtremeScorePrediction(finalPrediction, scoreRangeAnalysis);
+    
+    // Generate halftime prediction using similar algorithm approach
+    const halftimePrediction = this.generateHalftimePrediction(weightedResults, teamStats, originalData);
     
     return {
 mostLikelyScore: finalPrediction.score,
@@ -1688,11 +1691,47 @@ interpretAdvancedNeuralOutput(outputLayer) {
 
   calculateAlgorithmReliability(index, data) {
     return Math.random() * 0.3 + 0.7;
+generateHalftimePrediction(weightedResults, teamStats, originalData) {
+    // Generate halftime prediction using reduced scoring expectations
+    const fullTimeResults = weightedResults.map(result => {
+      const [homeGoals, awayGoals] = result.score.split('-').map(Number);
+      const halftimeHome = Math.round(homeGoals * (0.4 + Math.random() * 0.3));
+      const halftimeAway = Math.round(awayGoals * (0.4 + Math.random() * 0.3));
+      
+      return {
+        ...result,
+        score: `${Math.max(0, halftimeHome)}-${Math.max(0, halftimeAway)}`,
+        confidence: result.confidence * 0.85
+      };
+    });
+    
+    // Use same combination logic as full-time prediction
+    const totalWeight = fullTimeResults.reduce((sum, result) => sum + result.weight, 0);
+    const scoreFrequency = {};
+    
+    fullTimeResults.forEach(result => {
+      const score = result.score;
+      scoreFrequency[score] = (scoreFrequency[score] || 0) + result.weight;
+    });
+    
+    const bestScore = Object.entries(scoreFrequency)
+      .sort(([,a], [,b]) => b - a)[0]?.[0] || '0-0';
+    
+    const avgConfidence = fullTimeResults.reduce((sum, result) => 
+      sum + (result.confidence * result.weight), 0) / totalWeight;
+    
+    return {
+      score: bestScore,
+      confidence: avgConfidence || 0.6
+    };
   }
 
-  generateAdvancedAnalysisReport(teamStats, prediction, algorithms) {
-    return `AI Analysis: ${algorithms.length} algorithms analyzed. Final prediction confidence: ${prediction.confidence || 75}%`;
+  generateAdvancedAnalysisReport(teamStats, prediction, algorithms, halftimePrediction) {
+    const halftimeInfo = halftimePrediction ? ` | Halftime: ${halftimePrediction.score}` : '';
+    return `AI Analysis: ${algorithms.length} algorithms analyzed. Final prediction confidence: ${prediction.confidence || 75}%${halftimeInfo}`;
   }
+
+  getEnhancedAlternativeScenarios(weightedResults) {
 
   getEnhancedAlternativeScenarios(weightedResults) {
     return weightedResults.slice(0, 3).map(result => ({
@@ -2197,9 +2236,8 @@ generateAdvancedFallbackPrediction(prediction) {
   calculateAdvancedNextGoalProbability(currentScore, minute, scoringPatterns) {
     const baseProb = 0.3;
     const timeBonus = minute > 75 ? 0.1 : 0;
-    return Math.min(0.8, baseProb + timeBonus);
+return Math.min(0.8, baseProb + timeBonus);
   }
-}
 }
 
 export const predictionService = new PredictionService();
