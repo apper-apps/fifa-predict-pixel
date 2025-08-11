@@ -952,17 +952,15 @@ analyzeLiveMatch(prediction, scoreResult) {
       nextGoal: this.predictAdvancedNextGoal(scoreResult, { predictedScore: '0-0' }),
       cardProbability: this.calculateCardProbability(minute),
 substitutionLikelihood: this.calculateSubstitutionLikelihood(minute),
+substitutionLikelihood: this.calculateSubstitutionLikelihood(minute),
       criticalMoments: this.identifyUpcomingCriticalMoments(minute, currentScore),
       gameChangingEvents: this.predictGameChangingEvents(scoreResult)
     };
-  }
-};
   }
 
   // Fonctions utilitaires pour l'analyse avancée
   assessPredictionQuality(prediction, scoreResult) {
     const factors = {
-      exactMatch: prediction.predictedScore === scoreResult.actualScore,
       goalsDifference: this.calculateGoalsDifference(prediction.predictedScore, scoreResult.actualScore),
       confidenceAlignment: this.isConfidenceAligned(prediction, scoreResult.correct),
       riskAssessment: this.wasRiskAssessedCorrectly(prediction, scoreResult)
@@ -973,7 +971,7 @@ substitutionLikelihood: this.calculateSubstitutionLikelihood(minute),
     else if (factors.goalsDifference <= 1) quality = 'good';
     else if (factors.goalsDifference <= 2) quality = 'fair';
     
-    return { quality, factors };
+return { quality, factors };
   }
 
   calculateGoalsDifference(predicted, actual) {
@@ -1124,9 +1122,9 @@ wasRiskAssessedCorrectly(prediction, scoreResult) {
           error: error.message
         });
       }
-    }
+}
 
-return results;
+    return results;
   }
 
   // Additional utility methods that were outside the class
@@ -1364,7 +1362,7 @@ return results;
       retry_count: 3,
       backoff_delay: 5000,
       fallback_enabled: true
-    };
+};
   }
 }
 
